@@ -10,9 +10,7 @@ import {
   pageEditorAtom,
   titleEditorAtom,
 } from "@/features/editor/atoms/editor-atoms";
-import {
-  useUpdatePageMutation,
-} from "@/features/page/queries/page-query";
+import { useUpdatePageMutation } from "@/features/page/queries/page-query";
 import { useDebouncedValue } from "@mantine/hooks";
 import { useAtom } from "jotai";
 import { treeDataAtom } from "@/features/page/tree/atoms/tree-data-atom";
@@ -21,6 +19,7 @@ import { useQueryEmit } from "@/features/websocket/use-query-emit.ts";
 import { History } from "@tiptap/extension-history";
 import { buildPageUrl } from "@/features/page/page.utils.ts";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 export interface TitleEditorProps {
   pageId: string;
@@ -37,16 +36,20 @@ export function TitleEditor({
   spaceSlug,
   editable,
 }: TitleEditorProps) {
+  const { t } = useTranslation();
   const [debouncedTitleState, setDebouncedTitleState] = useState(null);
   const [debouncedTitle] = useDebouncedValue(debouncedTitleState, 500);
-  const updatePageMutation = useUpdatePageMutation();
+  const {
+    data: updatedPageData,
+    mutate: updatePageMutation,
+    status,
+  } = useUpdatePageMutation();
   const pageEditor = useAtomValue(pageEditorAtom);
   const [, setTitleEditor] = useAtom(titleEditorAtom);
   const [treeData, setTreeData] = useAtom(treeDataAtom);
   const emit = useQueryEmit();
   const navigate = useNavigate();
   const [activePageId, setActivePageId] = useState(pageId);
-
 
   const titleEditor = useEditor({
     extensions: [
@@ -58,7 +61,7 @@ export function TitleEditor({
       }),
       Text,
       Placeholder.configure({
-        placeholder: "Untitled",
+        placeholder: t("Untitled"),
         showOnlyWhenEditable: false,
       }),
       History.configure({
@@ -87,24 +90,29 @@ export function TitleEditor({
 
   useEffect(() => {
     if (debouncedTitle !== null && activePageId === pageId) {
-      updatePageMutation.mutate({
+      updatePageMutation({
         pageId: pageId,
         title: debouncedTitle,
       });
+    }
+  }, [debouncedTitle]);
+
+  useEffect(() => {
+    if (status === "success" && updatedPageData) {
+      const newTreeData = updateTreeNodeName(treeData, pageId, debouncedTitle);
+      setTreeData(newTreeData);
 
       setTimeout(() => {
         emit({
           operation: "updateOne",
+          spaceId: updatedPageData.spaceId,
           entity: ["pages"],
           id: pageId,
           payload: { title: debouncedTitle, slugId: slugId },
         });
       }, 50);
-
-      const newTreeData = updateTreeNodeName(treeData, pageId, debouncedTitle);
-      setTreeData(newTreeData);
     }
-  }, [debouncedTitle]);
+  }, [updatedPageData, status]);
 
   useEffect(() => {
     if (titleEditor && title !== titleEditor.getText()) {
