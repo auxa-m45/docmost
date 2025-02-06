@@ -1,4 +1,5 @@
 import type { EditorView } from "@tiptap/pm/view";
+import type { IAttachment } from "./types";
 
 export type UploadFn = (
   file: File,
@@ -8,6 +9,6 @@ export type UploadFn = (
 ) => void;
 
 export interface MediaUploadOptions {
-  validateFn?: (file: File) => void;
-  onUpload: (file: File, pageId: string) => Promise<any>;
+  validateFn?: (file: File) => boolean;
+  onUpload: (file: File, pageId: string) => Promise<IAttachment>;
 }

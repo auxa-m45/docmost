@@ -53,6 +53,7 @@ export function isAttachmentNode(nodeType: string) {
     'attachment',
     'image',
     'video',
+    'audio',
     'excalidraw',
     'drawio',
   ];

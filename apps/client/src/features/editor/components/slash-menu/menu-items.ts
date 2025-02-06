@@ -18,6 +18,7 @@ import {
   IconTypography,
   IconMenu4,
   IconCalendar,
+  IconMusic,
 } from "@tabler/icons-react";
 import {
   CommandProps,
@@ -25,6 +26,7 @@ import {
 } from "@/features/editor/components/slash-menu/types";
 import { uploadImageAction } from "@/features/editor/components/image/upload-image-action.tsx";
 import { uploadVideoAction } from "@/features/editor/components/video/upload-video-action.tsx";
+import { uploadAudioAction } from "@/features/editor/components/audio/upload-audio-action.tsx";
 import { uploadAttachmentAction } from "@/features/editor/components/attachment/upload-attachment-action.tsx";
 import IconExcalidraw from "@/components/icons/icon-excalidraw";
 import IconMermaid from "@/components/icons/icon-mermaid";
@@ -197,6 +199,31 @@ const CommandGroups: SlashMenuGroupedItemsType = {
             const file = input.files[0];
             const pos = editor.view.state.selection.from;
             uploadVideoAction(file, editor.view, pos, pageId);
+          }
+        };
+        input.click();
+      },
+    },
+    {
+      title: "Audio",
+      description: "Upload any audio from your device.",
+      searchTerms: ["audio", "music", "sound", "mp3", "wav", "ogg", "media"],
+      icon: IconMusic,
+      command: ({ editor, range }) => {
+        editor.chain().focus().deleteRange(range).run();
+
+        const pageId = editor.storage?.pageId;
+        if (!pageId) return;
+
+        // upload audio
+        const input = document.createElement("input");
+        input.type = "file";
+        input.accept = "audio/*";
+        input.onchange = async () => {
+          if (input.files?.length) {
+            const file = input.files[0];
+            const pos = editor.view.state.selection.from;
+            uploadAudioAction(file, editor.view, pos, pageId);
           }
         };
         input.click();
