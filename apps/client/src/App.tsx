@@ -19,6 +19,7 @@ import InviteSignup from "@/pages/auth/invite-signup.tsx";
 import ForgotPassword from "@/pages/auth/forgot-password.tsx";
 import PasswordReset from "./pages/auth/password-reset";
 import { useTranslation } from "react-i18next";
+import { DiscordSetup } from "./pages/auth/discord-setup";
 
 export default function App() {
   const { t } = useTranslation();
@@ -29,6 +30,7 @@ export default function App() {
         <Route index element={<Navigate to="/home" />} />
         <Route path={"/login"} element={<LoginPage />} />
         <Route path={"/invites/:invitationId"} element={<InviteSignup />} />
+        <Route path={"/discord-setup"} element={<DiscordSetup />} />
         <Route path={"/setup/register"} element={<SetupWorkspace />} />
         <Route path={"/forgot-password"} element={<ForgotPassword />} />
         <Route path={"/password-reset"} element={<PasswordReset />} />

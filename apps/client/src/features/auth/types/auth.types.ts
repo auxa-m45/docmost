@@ -38,3 +38,21 @@ export interface IVerifyUserToken {
 export interface ICollabToken {
   token: string;
 }
+
+export interface IDiscordPendingUser {
+  name: string;
+  email: string;
+  workspaceId: string;
+  discordId: string;
+  avatarUrl: string;
+}
+
+export interface IDiscordSetupPassword {
+  pendingUser: IDiscordPendingUser;
+  password: string;
+}
+
+export interface IDiscordCallback {
+  code: string;
+  state: string;
+}

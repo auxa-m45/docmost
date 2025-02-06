@@ -145,4 +145,16 @@ export class EnvironmentService {
   isSelfHosted(): boolean {
     return !this.isCloud();
   }
+
+  getStateEncryptionKey(): string {
+    return this.configService.get<string>('STATE_ENCRYPTION_KEY');
+  }
+
+  getStateEncryptionIV(): string {
+    return this.configService.get<string>('STATE_ENCRYPTION_IV');
+  }
+
+  getFrontendUrl(): string {
+    return (this.configService.get<string>('FRONTEND_URL') || 'http://localhost:5173');
+  }
 }

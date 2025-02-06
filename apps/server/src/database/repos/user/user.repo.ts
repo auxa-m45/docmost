@@ -33,6 +33,7 @@ export class UserRepo {
     'createdAt',
     'updatedAt',
     'deletedAt',
+    'discordId',
   ];
 
   async findById(
@@ -63,6 +64,18 @@ export class UserRepo {
       .select(this.baseFields)
       .$if(includePassword, (qb) => qb.select('password'))
       .where(sql`LOWER(email)`, '=', sql`LOWER(${email})`)
+      .where('workspaceId', '=', workspaceId)
+      .executeTakeFirst();
+  }
+
+  async findByDiscordId(
+    discordId: string,
+    workspaceId: string,
+  ): Promise<User> {
+    return this.db
+      .selectFrom('users')
+      .select(this.baseFields)
+      .where('discordId', '=', discordId)
       .where('workspaceId', '=', workspaceId)
       .executeTakeFirst();
   }

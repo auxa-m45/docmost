@@ -51,6 +51,7 @@ export interface Comments {
   id: Generated<string>;
   pageId: string;
   parentCommentId: string | null;
+  resolvedAt: Timestamp | null;
   selection: string | null;
   type: string | null;
   workspaceId: string;
@@ -59,6 +60,7 @@ export interface Comments {
 export interface Groups {
   createdAt: Generated<Timestamp>;
   creatorId: string | null;
+  deletedAt: Timestamp | null;
   description: string | null;
   id: Generated<string>;
   isDefault: boolean;
@@ -118,6 +120,7 @@ export interface Pages {
 export interface SpaceMembers {
   addedById: string | null;
   createdAt: Generated<Timestamp>;
+  deletedAt: Timestamp | null;
   groupId: string | null;
   id: Generated<string>;
   role: string;
@@ -135,7 +138,7 @@ export interface Spaces {
   id: Generated<string>;
   logo: string | null;
   name: string | null;
-  slug: string | null;
+  slug: string;
   updatedAt: Generated<Timestamp>;
   visibility: Generated<string>;
   workspaceId: string;
@@ -146,6 +149,7 @@ export interface Users {
   createdAt: Generated<Timestamp>;
   deactivatedAt: Timestamp | null;
   deletedAt: Timestamp | null;
+  discordId: string | null;
   email: string;
   emailVerifiedAt: Timestamp | null;
   id: Generated<string>;
@@ -155,7 +159,7 @@ export interface Users {
   locale: string | null;
   name: string | null;
   password: string | null;
-  role: string;
+  role: string | null;
   settings: Json | null;
   timezone: string | null;
   updatedAt: Generated<Timestamp>;
@@ -186,13 +190,18 @@ export interface WorkspaceInvitations {
 }
 
 export interface Workspaces {
-  allowedEmailDomains: Generated<string[] | null>;
   createdAt: Generated<Timestamp>;
   customDomain: string | null;
   defaultRole: Generated<string>;
   defaultSpaceId: string | null;
   deletedAt: Timestamp | null;
   description: string | null;
+  discordClientId: string | null;
+  discordClientSecret: string | null;
+  discordEnabled: Generated<boolean>;
+  discordGuildId: string | null;
+  discordJitEnabled: Generated<boolean>;
+  emailDomains: Generated<string[] | null>;
   hostname: string | null;
   id: Generated<string>;
   logo: string | null;

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import {
+  discordCallback,
   forgotPassword,
   login,
   logout,
@@ -11,6 +12,7 @@ import { useNavigate } from "react-router-dom";
 import { useAtom } from "jotai";
 import { currentUserAtom } from "@/features/user/atoms/current-user-atom";
 import {
+  IDiscordCallback,
   IForgotPassword,
   ILogin,
   IPasswordReset,
@@ -140,6 +142,23 @@ export default function useAuth() {
     }
   };
 
+  const handleDiscordCallback = async (data: IDiscordCallback) => {
+    setIsLoading(true);
+
+    try {
+      await discordCallback(data);
+      setIsLoading(false);
+      navigate(APP_ROUTE.HOME);
+    } catch (err) {
+      setIsLoading(false);
+      notifications.show({
+        message: err.response?.data.message || t("Failed to authenticate with Discord"),
+        color: "red",
+      });
+      navigate(APP_ROUTE.AUTH.LOGIN);
+    }
+  };
+
   return {
     signIn: handleSignIn,
     invitationSignup: handleInvitationSignUp,
@@ -148,6 +167,7 @@ export default function useAuth() {
     passwordReset: handlePasswordReset,
     verifyUserToken: handleVerifyUserToken,
     logout: handleLogout,
+    discordCallback: handleDiscordCallback, 
     isLoading,
   };
 }

@@ -2,6 +2,8 @@ import api from "@/lib/api-client";
 import {
   IChangePassword,
   ICollabToken,
+  IDiscordCallback,
+  IDiscordSetupPassword,
   IForgotPassword,
   ILogin,
   IPasswordReset,
@@ -46,4 +48,16 @@ export async function verifyUserToken(data: IVerifyUserToken): Promise<any> {
 export async function getCollabToken(): Promise<ICollabToken> {
   const req = await api.post<ICollabToken>("/auth/collab-token");
   return req.data;
+}
+
+export async function discordCallback(data: IDiscordCallback):Promise<any> {
+  const response = await api.get(`/auth/discord/callback`, {
+    params: data,
+  });
+  return response.data;
+};
+
+export async function completeDiscordSetup(data: IDiscordSetupPassword): Promise<{ token: string }> {
+  const response = await api.post<{ token: string }>("/auth/discord/complete-setup", data);
+  return response.data;
 }

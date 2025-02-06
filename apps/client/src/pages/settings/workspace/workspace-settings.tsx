@@ -3,6 +3,7 @@ import WorkspaceNameForm from "@/features/workspace/components/settings/componen
 import { useTranslation } from "react-i18next";
 import {getAppName} from "@/lib/config.ts";
 import {Helmet} from "react-helmet-async";
+import WorkspaceDiscordForm from "@/features/workspace/components/settings/components/workspace-discord-form";
 
 export default function WorkspaceSettings() {
   const { t } = useTranslation();
@@ -13,6 +14,7 @@ export default function WorkspaceSettings() {
             </Helmet>
             <SettingsTitle title={t("General")} />
             <WorkspaceNameForm/>
+            <WorkspaceDiscordForm/>
         </>
     );
 }

@@ -1,12 +1,18 @@
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
+  Logger,
   NotFoundException,
+  Patch,
   Post,
+  Query,
+  Redirect,
   Req,
   Res,
+  UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
 import { LoginDto } from './dto/login.dto';
@@ -22,15 +28,19 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { PasswordResetDto } from './dto/password-reset.dto';
 import { VerifyUserTokenDto } from './dto/verify-user-token.dto';
-import { FastifyReply } from 'fastify';
+import { FastifyReply, FastifyRequest } from 'fastify';
 import { addDays } from 'date-fns';
+import { DiscordAuthGuard } from './guards/discord.guard';
+import { DiscordRedirectDto } from './dto/discord-redirect.dto';
+import { DiscordConfigDto } from './dto/discord-config.dto';
+import { UserRole } from 'src/common/helpers/types/permission';
 
 @Controller('auth')
 export class AuthController {
   constructor(
     private authService: AuthService,
     private environmentService: EnvironmentService,
-  ) {}
+  ) { }
 
   @HttpCode(HttpStatus.OK)
   @Post('login')
@@ -44,6 +54,84 @@ export class AuthController {
       req.raw.workspaceId,
     );
     this.setAuthCookie(res, authToken);
+  }
+
+  @Get('discord')
+  @UseGuards(DiscordAuthGuard)
+  async discordAuth(
+    @Query('workspace_id') workspaceId?: string,
+  ) {
+
+  }
+  
+  @Get('discord/callback')
+  @UseGuards(DiscordAuthGuard)
+  async discordAuthCallback(
+    @Req() req: FastifyRequest,
+    @Res({ passthrough: true }) res: FastifyReply,
+  ) {
+    const authInfo = (req as any).discordAuthInfo;
+    if (!authInfo) {
+      throw new UnauthorizedException('Authentication information not found');
+    }
+
+    const result = await this.authService.discordLoginWithPendingUser(authInfo);
+    const redirectUrl = this.environmentService.getFrontendUrl();
+
+    if (result.type === 'existing') {
+      this.setAuthCookie(res, result.token);
+      return res.status(302).redirect(`${redirectUrl}`);
+
+    }
+
+    const pendingUserData = encodeURIComponent(JSON.stringify(result.pendingUser));
+    return res.status(302).redirect(`${redirectUrl}/discord-setup?data=${pendingUserData}`);
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Post('discord/complete-setup')
+  async completeDiscordSetup(
+    @Body() data: { pendingUser: any; password: string },
+    @Res({ passthrough: true }) res: FastifyReply,
+  ) {
+    const token = await this.authService.completeDiscordLogin(
+      data.pendingUser,
+      data.password
+    );
+    this.setAuthCookie(res, token);
+  }
+
+  @Get('discord-config')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard)
+  async discordConfig(
+    @AuthUser() user: User,
+    @AuthWorkspace() workspace: Workspace,
+  ): Promise<DiscordConfigDto> {
+    if (user.role !== UserRole.ADMIN && user.role !== UserRole.OWNER) {
+      throw new UnauthorizedException();
+    }
+    return {
+      enabled: workspace.discordEnabled,
+      clientId: workspace.discordClientId,
+      clientSecret: workspace.discordClientSecret,
+      guildId: workspace.discordGuildId,
+      jitEnabled: workspace.discordJitEnabled,
+    }
+  }
+
+  @Patch('discord-config')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard)
+  async updateDiscordConfig(
+    @AuthUser() user: User,
+    @AuthWorkspace() workspace: Workspace,
+    @Body() dto: DiscordConfigDto,
+  ): Promise<DiscordConfigDto> {
+    if (user.role !== UserRole.ADMIN && user.role !== UserRole.OWNER) {
+      throw new UnauthorizedException();
+    }
+    return this.authService.updateDiscordConfig(dto, workspace.id);
   }
 
   @UseGuards(SetupGuard)

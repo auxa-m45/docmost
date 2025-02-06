@@ -163,7 +163,6 @@ export class WorkspaceInvitationService {
       throw new BadRequestException('Invalid invitation token');
     }
 
-    const password = await hashPassword(dto.password);
     let newUser: User;
 
     try {
@@ -173,7 +172,7 @@ export class WorkspaceInvitationService {
             name: dto.name,
             email: invitation.email,
             emailVerifiedAt: new Date(),
-            password: password,
+            password: dto.password,
             role: invitation.role,
             invitedById: invitation.invitedById,
             workspaceId: workspaceId,

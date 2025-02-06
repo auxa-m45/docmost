@@ -86,3 +86,26 @@ export async function uploadLogo(file: File) {
   });
   return req.data;
 }
+
+export async function updateDiscordConfig(data: {
+  enabled: boolean;
+  clientId: string;
+  clientSecret: string;
+  guildId: string;
+  jitEnabled: boolean;
+}) {
+  console.log(data);
+  const response = await api.patch('/auth/discord-config', data);
+  return response.data;
+}
+
+export async function getDiscordConfig(): Promise<{
+  enabled: boolean;
+  clientId: string | null;
+  clientSecret: string | null;
+  guildId: string | null;
+  jitEnabled: boolean;
+}> {
+  const response = await api.get('/auth/discord-config');
+  return response.data;
+}

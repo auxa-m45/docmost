@@ -10,12 +10,15 @@ import {
   PasswordInput,
   Box,
   Anchor,
+  Divider,
 } from "@mantine/core";
 import classes from "./auth.module.css";
 import { useRedirectIfAuthenticated } from "@/features/auth/hooks/use-redirect-if-authenticated.ts";
 import { Link, useNavigate } from "react-router-dom";
 import APP_ROUTE from "@/lib/app-route.ts";
+import { getBackendUrl } from "@/lib/config";
 import { useTranslation } from "react-i18next";
+import { IconBrandDiscord } from "@tabler/icons-react";
 
 const formSchema = z.object({
   email: z
@@ -41,6 +44,10 @@ export function LoginForm() {
   async function onSubmit(data: ILogin) {
     await signIn(data);
   }
+
+  const handleDiscordLogin = () => {
+    window.location.href = `${getBackendUrl()}/auth/discord`;
+  };
 
   return (
     <Container size={420} my={40} className={classes.container}>
@@ -71,6 +78,17 @@ export function LoginForm() {
             {t("Sign In")}
           </Button>
         </form>
+
+        <Divider label={t("Or continue with")} labelPosition="center" />
+
+        <Button
+          variant="outline"
+          leftSection={<IconBrandDiscord size={20} />}
+          onClick={handleDiscordLogin}
+          fullWidth
+        >
+          {t("Continue with Discord")}
+        </Button>
 
         <Anchor
           to={APP_ROUTE.AUTH.FORGOT_PASSWORD}

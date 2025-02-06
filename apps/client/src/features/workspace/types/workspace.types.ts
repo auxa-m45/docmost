@@ -11,6 +11,11 @@ export interface IWorkspace {
   settings: any;
   createdAt: Date;
   updatedAt: Date;
+  discordEnabled: boolean;
+  discordClientId: string | null;
+  discordClientSecret: string | null;
+  discordGuildId: string | null;
+  discordJitEnabled: boolean;
 }
 
 export interface ICreateInvite {
