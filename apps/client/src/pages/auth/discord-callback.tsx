@@ -27,7 +27,7 @@ export function DiscordCallback() {
 
   return (
     <Center h="100vh">
-      <Stack align="center" spacing="md">
+      <Stack align="center" my="md">
         <Loader size="lg" />
         <Text size="lg">{t("Authenticating with Discord...")}</Text>
       </Stack>
