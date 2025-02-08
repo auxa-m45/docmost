@@ -12,10 +12,11 @@ import {
 import { PaginationOptions } from '../../pagination/pagination-options';
 import { executeWithPagination } from '@docmost/db/pagination/pagination';
 import { sql } from 'kysely';
+import { pick } from 'src/common/helpers/types/type.helper';
 
 @Injectable()
 export class UserRepo {
-  constructor(@InjectKysely() private readonly db: KyselyDB) {}
+  constructor(@InjectKysely() private readonly db: KyselyDB) { }
 
   public baseFields: Array<keyof Users> = [
     'id',
@@ -121,17 +122,12 @@ export class UserRepo {
       lastLoginAt: new Date(),
     };
 
-    const filteredInsertableUser = Object.fromEntries(
-      Object.entries({ ...insertableUser, ...user })
-        .filter(([key]) => {
-          return key in ({} as InsertableUser);
-        })
-    );
+    const filteredInsertableUser = pick(insertableUser, ['avatarUrl', 'discordId', 'email', 'emailVerifiedAt', 'id', 'invitedById', 'lastLoginAt', 'locale', 'name', 'password', 'role', 'settings', 'timezone', 'workspaceId']);
 
     const db = dbOrTx(this.db, trx);
     return db
       .insertInto('users')
-      .values({ ...filteredInsertableUser})
+      .values({ ...filteredInsertableUser, ...user })
       .returningAll()
       .executeTakeFirst();
   }
