@@ -121,10 +121,17 @@ export class UserRepo {
       lastLoginAt: new Date(),
     };
 
+    const filteredInsertableUser = Object.fromEntries(
+      Object.entries({ ...insertableUser, ...user })
+        .filter(([key]) => {
+          return key in ({} as InsertableUser);
+        })
+    );
+
     const db = dbOrTx(this.db, trx);
     return db
       .insertInto('users')
-      .values({ ...insertableUser, ...user })
+      .values({ ...filteredInsertableUser})
       .returningAll()
       .executeTakeFirst();
   }
