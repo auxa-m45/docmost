@@ -157,4 +157,8 @@ export class EnvironmentService {
   getFrontendUrl(): string {
     return (this.configService.get<string>('FRONTEND_URL') || 'http://localhost:5173');
   }
+  
+  getDefaultLocale(): string {
+    return this.configService.get<string>('DEFAULT_LANG', 'en_US');
+  }
 }

@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  Logger,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -30,15 +31,14 @@ import { executeTx } from '@docmost/db/utils';
 import { VerifyUserTokenDto } from '../dto/verify-user-token.dto';
 import { EnvironmentService } from 'src/integrations/environment/environment.service';
 import { WorkspaceRepo } from '@docmost/db/repos/workspace/workspace.repo';
-import { DiscordRedirectDto } from '../dto/discord-redirect.dto';
 import { GroupUserRepo } from '@docmost/db/repos/group/group-user.repo';
 import { WorkspaceService } from 'src/core/workspace/services/workspace.service';
 import { UpdateDiscordConfigDto } from '../dto/discord-update-config.dto';
 import { DiscordConfigDto } from '../dto/discord-config.dto';
-import { DiscordStrategy } from '../strategies/discord.strategy';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
   constructor(
     private signupService: SignupService,
     private tokenService: TokenService,
@@ -280,20 +280,20 @@ export class AuthService {
             workspaceId: workspace.id,
             password: "",
             emailVerifiedAt: new Date(),
-            locale: 'en-US',
+            locale: this.environmentService.getDefaultLocale()||'en-US',
             discordId: discordUser.id,
             avatarUrl: avatarUrl,
           });
-          console.log("added user", user);
+          const {password, ...userObj} = user;
+          this.logger.log(`Successfully created user: ${JSON.stringify(userObj)}`);
           await this.workspaceService.addUserToWorkspace(user.id, workspace.id);
           await this.groupUserRepo.addUserToDefaultGroup(user.id, workspace.id);
 
           return this.tokenService.generateAccessToken(user);
         }
-        console.error('could not find user');
+        this.logger.error("User not found and discord jit not enabled");
         throw new UnauthorizedException();
       }
-      console.log(user);
 
       // Update Discord information if user exists
       await this.userRepo.updateUser(
@@ -379,15 +379,16 @@ export class AuthService {
 
   async completeDiscordLogin(pendingUser: any, password: string): Promise<string> {
 
-    const user = await this.userRepo.insertUser({
-      ...pendingUser,
-      password: password,
-      emailVerifiedAt: new Date(),
-      locale: 'en-US'
-    });
+    await this.userRepo.updateUser(
+      {
+        password: await hashPassword(password),
+        emailVerifiedAt: new Date(),
+      },
+      pendingUser.id,
+      pendingUser.workspaceId
+    );
 
-    await this.workspaceService.addUserToWorkspace(user.id, pendingUser.workspaceId);
-    await this.groupUserRepo.addUserToDefaultGroup(user.id, pendingUser.workspaceId);
+    const user = await this.userRepo.findById(pendingUser.id, pendingUser.workspaceId);
 
     return this.tokenService.generateAccessToken(user);
   }
