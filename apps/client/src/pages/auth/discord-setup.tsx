@@ -46,11 +46,10 @@ export function DiscordSetup() {
     <Container size={420} my={40}>
       <Paper radius="md" p="xl" withBorder>
         <Title order={2} ta="center" mb="lg">
-          Set Password
+          パスワードの設定
         </Title>
         <Text size="sm" mb="lg">
-          Welcome {pendingUser.name}! Please set a password to complete your
-          account setup.
+          ようこそ！アカウントのセットアップを完了するためにパスワードを設定してください。
         </Text>
         <DiscordSetupForm onSubmit={handleSubmit} isLoading={isLoading} />
       </Paper>

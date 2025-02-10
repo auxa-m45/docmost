@@ -71,7 +71,15 @@ export class DiscordStrategy extends PassportStrategy(Strategy, 'discord') {
             if (!req.query.state) {
                 throw new Error('Missing state parameter');
             }
+
             const stateData = this.decryptState(req.query.state);
+
+            // validate guild membership
+            const workspaceGuildId = (await this.workspaceRepo.findById(stateData.workspaceId)).discordGuildId;
+            if (!profile.guilds.some((guild: any) => guild.id === workspaceGuildId)) {
+                throw new Error('User not a member of the workspace');
+            }
+            
             return {
                 accessToken,
                 refreshToken,

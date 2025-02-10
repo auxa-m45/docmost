@@ -4,12 +4,10 @@ import {
   Get,
   HttpCode,
   HttpStatus,
-  Logger,
   NotFoundException,
   Patch,
   Post,
   Query,
-  Redirect,
   Req,
   Res,
   UnauthorizedException,
@@ -31,7 +29,6 @@ import { VerifyUserTokenDto } from './dto/verify-user-token.dto';
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { addDays } from 'date-fns';
 import { DiscordAuthGuard } from './guards/discord.guard';
-import { DiscordRedirectDto } from './dto/discord-redirect.dto';
 import { DiscordConfigDto } from './dto/discord-config.dto';
 import { UserRole } from 'src/common/helpers/types/permission';
 
@@ -75,7 +72,7 @@ export class AuthController {
       throw new UnauthorizedException('Authentication information not found');
     }
 
-    const result = await this.authService.discordLoginWithPendingUser(authInfo);
+    const result = await this.authService.discordLogin(authInfo);
     const redirectUrl = this.environmentService.getFrontendUrl();
 
     if (result.type === 'existing') {
@@ -84,6 +81,7 @@ export class AuthController {
 
     }
 
+    // new user
     const pendingUserData = encodeURIComponent(JSON.stringify(result.pendingUser));
     return res.status(302).redirect(`${redirectUrl}/discord-setup?data=${pendingUserData}`);
   }
@@ -94,7 +92,7 @@ export class AuthController {
     @Body() data: { pendingUser: any; password: string },
     @Res({ passthrough: true }) res: FastifyReply,
   ) {
-    const token = await this.authService.completeDiscordLogin(
+    const token = await this.authService.completeDiscordUserOnboarding(
       data.pendingUser,
       data.password
     );

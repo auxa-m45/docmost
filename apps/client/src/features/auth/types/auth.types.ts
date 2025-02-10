@@ -40,11 +40,9 @@ export interface ICollabToken {
 }
 
 export interface IDiscordPendingUser {
-  name: string;
-  email: string;
+  token: string;
   workspaceId: string;
-  discordId: string;
-  avatarUrl: string;
+  id: string
 }
 
 export interface IDiscordSetupPassword {

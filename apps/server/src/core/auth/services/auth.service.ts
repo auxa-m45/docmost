@@ -236,155 +236,116 @@ export class AuthService {
     refreshToken: string;
     profile: any;
     workspaceId: string;
-  }) {
-    const workspace_id = authInfo.workspaceId;
-    const workspace = await this.workspaceRepo.findById(workspace_id);
-    if (!workspace ||
-      !workspace.discordEnabled ||
-      !workspace.discordJitEnabled ||
-      !workspace.discordClientId ||
-      !workspace.discordClientSecret
-    ) {
-      throw new UnauthorizedException();
-    }
-
-    try {
-      const discordUser = authInfo.profile;
-      if (!discordUser.email) {
-        throw new UnauthorizedException();
-      }
-
-      // Check if user is a member of the specified guild
-      const guildMemberResponse = await fetch(
-        `https://discord.com/api/v10/users/@me/guilds/${workspace.discordGuildId}/member`,
-        {
-          headers: {
-            Authorization: `Bearer ${authInfo.accessToken}`,
-          },
-        }
-      );
-
-      if (!guildMemberResponse.ok) {
-        throw new UnauthorizedException('User is not a member of the required Discord server');
-      }
-
-      const guildMember = await guildMemberResponse.json();
-
-      const user = await this.userRepo.findByDiscordId(discordUser.id, workspace.id);
-      if (!user) {
-        if (workspace.discordJitEnabled) {
-          const avatarUrl = this.getDiscordAvatarUrl(discordUser.id, discordUser.avatar, { size: 256 }, workspace.discordGuildId, guildMember.avatar);
-          const user = await this.userRepo.insertUser({
-            name: discordUser.username,
-            email: discordUser.email,
-            workspaceId: workspace.id,
-            password: "",
-            emailVerifiedAt: new Date(),
-            locale: this.environmentService.getDefaultLocale()||'en-US',
-            discordId: discordUser.id,
-            avatarUrl: avatarUrl,
-          });
-          const {password, ...userObj} = user;
-          this.logger.log(`Successfully created user: ${JSON.stringify(userObj)}`);
-          await this.workspaceService.addUserToWorkspace(user.id, workspace.id);
-          await this.groupUserRepo.addUserToDefaultGroup(user.id, workspace.id);
-
-          return this.tokenService.generateAccessToken(user);
-        }
-        this.logger.error("User not found and discord jit not enabled");
-        throw new UnauthorizedException();
-      }
-
-      // Update Discord information if user exists
-      await this.userRepo.updateUser(
-        {
-          discordId: discordUser.id,
-          avatarUrl: this.getDiscordAvatarUrl(discordUser.id, discordUser.avatar, { size: 256 }, workspace.discordGuildId, guildMember.avatar),
-        },
-        user.id,
-        workspace.id
-      );
-      return this.tokenService.generateAccessToken(user);
-    } catch (error) {
-      throw new UnauthorizedException('Failed to authenticate with Discord');
-    }
-  }
-
-  async discordLoginWithPendingUser(authInfo: {
-    accessToken: string;
-    refreshToken: string;
-    profile: any;
-    workspaceId: string;
   }): Promise<{
     type: 'existing';
     token: string;
   } | {
     type: 'new';
-    pendingUser: any;
+    pendingUser: { token: string; workspaceId: string; id: string };
   }> {
     const workspace = await this.workspaceRepo.findById(authInfo.workspaceId);
     if (!workspace ||
       !workspace.discordEnabled ||
-      !workspace.discordJitEnabled ||
       !workspace.discordClientId ||
       !workspace.discordClientSecret
     ) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException('Discord not configured');
     }
 
-    try {
-      const discordUser = authInfo.profile;
-      if (!discordUser.email) {
-        throw new UnauthorizedException();
-      }
+    const discordUser = authInfo.profile;
+    if (!discordUser.email) {
+      throw new UnauthorizedException('Discord email not found');
+    }
 
-      // existing user
-      const existingUser = await this.userRepo.findByDiscordId(discordUser.id, workspace.id);
-      if (existingUser) {
-        const token = await this.tokenService.generateAccessToken(existingUser);
-        return {
-          type: 'existing',
-          token
-        };
+    const guildMemberResponse = await fetch(
+      `https://discord.com/api/v10/users/@me/guilds/${workspace.discordGuildId}/member`,
+      {
+        headers: {
+          Authorization: `Bearer ${authInfo.accessToken}`,
+        },
       }
+    );
+    if (!guildMemberResponse.ok) {
+      throw new UnauthorizedException('User is not a member of the required Discord server');
+    }
+    const guildMember = await guildMemberResponse.json();
+    const avatarUrl = this.getDiscordAvatarUrl(discordUser.id, discordUser.avatar, { size: 256 }, workspace.discordGuildId, guildMember.avatar);
 
-      // new user
-      const guildMemberResponse = await fetch(
-        `https://discord.com/api/v10/users/@me/guilds/${workspace.discordGuildId}/member`,
-        {
-          headers: {
-            Authorization: `Bearer ${authInfo.accessToken}`,
+    // existing user
+    const existingUser = await this.userRepo.findByDiscordId(discordUser.id, workspace.id);
+    if (existingUser) {
+      if (existingUser.avatarUrl !== avatarUrl) {
+        await this.userRepo.updateUser(
+          {
+            avatarUrl: avatarUrl,
           },
-        }
-      );
-
-      if (!guildMemberResponse.ok) {
-        throw new UnauthorizedException('User is not a member of the required Discord server');
+          existingUser.id,
+          workspace.id
+        );
       }
-      const guildMember = await guildMemberResponse.json();
+      const token = await this.tokenService.generateAccessToken(existingUser);
       return {
-        type: 'new',
-        pendingUser: {
-          name: discordUser.username,
-          email: discordUser.email,
-          workspaceId: workspace.id,
-          discordId: discordUser.id,
-          avatarUrl: this.getDiscordAvatarUrl(discordUser.id, discordUser.avatar, { size: 256 }, workspace.discordGuildId, guildMember.avatar)
-        }
+        type: 'existing',
+        token
       };
-    } catch (error) {
-      throw new UnauthorizedException('Failed to authenticate with Discord');
     }
+
+    // new user
+    if (!workspace.discordJitEnabled) {
+      throw new UnauthorizedException('Discord JIT not enabled');
+    }
+
+    const user = await this.userRepo.insertUser({
+      name: discordUser.username,
+      email: discordUser.email,
+      workspaceId: workspace.id,
+      password: nanoIdGen(16),
+      emailVerifiedAt: new Date(),
+      locale: this.environmentService.getDefaultLocale() || 'en-US',
+      discordId: discordUser.id,
+      avatarUrl: avatarUrl,
+    });
+    const { password, ...userObj } = user;
+    this.logger.log(`Successfully created user: ${JSON.stringify(userObj)}`);
+    await this.workspaceService.addUserToWorkspace(user.id, workspace.id);
+    await this.groupUserRepo.addUserToDefaultGroup(user.id, workspace.id);
+
+    const token = nanoIdGen(16);
+
+    await this.userTokenRepo.insertUserToken({
+      token: token,
+      userId: user.id,
+      workspaceId: user.workspaceId,
+      expiresAt: new Date(new Date().getTime() + 60 * 60 * 1000), // 1 hour
+      type: UserTokenType.DISCORD_PENDING_LOGIN,
+    });
+
+    return {
+      type: 'new',
+      pendingUser: {
+        token: token,
+        workspaceId: workspace.id,
+        id: user.id,
+      }
+    };
+
   }
 
-  async completeDiscordLogin(pendingUser: any, password: string): Promise<string> {
+  async completeDiscordUserOnboarding(pendingUser: any, password: string): Promise<string> {
+    const userToken = await this.userTokenRepo.findById(pendingUser.token, pendingUser.workspaceId);
+    if (!userToken || userToken.type !== UserTokenType.DISCORD_PENDING_LOGIN || userToken.expiresAt < new Date()
+    ) {
+      throw new BadRequestException('Invalid or expired token');
+    }
+
+    const existingUser = await this.userRepo.findById(pendingUser.id, pendingUser.workspaceId);
 
     await this.userRepo.updateUser(
       {
         password: await hashPassword(password),
         emailVerifiedAt: new Date(),
       },
-      pendingUser.id,
+      existingUser.id,
       pendingUser.workspaceId
     );
 
