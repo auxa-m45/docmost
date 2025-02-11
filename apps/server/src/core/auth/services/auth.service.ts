@@ -351,6 +351,8 @@ export class AuthService {
 
     const user = await this.userRepo.findById(pendingUser.id, pendingUser.workspaceId);
 
+    await this.userTokenRepo.deleteToken(pendingUser.token);
+
     return this.tokenService.generateAccessToken(user);
   }
 

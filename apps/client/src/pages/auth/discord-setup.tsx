@@ -25,7 +25,7 @@ export function DiscordSetup() {
   async function handleSubmit(values: DiscordSetupFormValues) {
     try {
       setIsLoading(true);
-      const { token } = await completeDiscordSetup({
+      const { success } = await completeDiscordSetup({
         pendingUser,
         password: values.password,
       });

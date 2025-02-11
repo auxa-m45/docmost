@@ -57,7 +57,7 @@ export async function discordCallback(data: IDiscordCallback):Promise<any> {
   return response.data;
 };
 
-export async function completeDiscordSetup(data: IDiscordSetupPassword): Promise<{ token: string }> {
-  const response = await api.post<{ token: string }>("/auth/discord/complete-setup", data);
+export async function completeDiscordSetup(data: IDiscordSetupPassword): Promise<{ success: boolean, status: 200 }> {
+  const response = await api.post<{ success: boolean, status: 200 }>("/auth/discord/complete-setup", data);
   return response.data;
 }
