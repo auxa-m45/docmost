@@ -167,7 +167,8 @@ export class WorkspaceInvitationService {
 
     let newUser: User;
 
-    const locale = (await this.workspaceService.getWorkspaceInfo(workspaceId).defaultLocale) || this.environmentService.getDefaultLocale() || 'en_US';
+    const workspaceInfo = await this.workspaceService.getWorkspaceInfo(workspaceId);
+    const locale = workspaceInfo.defaultLocale || this.environmentService.getDefaultLocale() || 'en_US';
 
     try {
       await executeTx(this.db, async (trx) => {
