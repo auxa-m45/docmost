@@ -34,6 +34,7 @@ export class WorkspaceInvitationService {
     private mailService: MailService,
     private environmentService: EnvironmentService,
     private tokenService: TokenService,
+    private workspaceService: WorkspaceService,
     @InjectKysely() private readonly db: KyselyDB,
   ) {}
 
@@ -165,6 +166,8 @@ export class WorkspaceInvitationService {
 
     let newUser: User;
 
+    const locale = (await this.workspaceService.getWorkspaceInfo(workspaceId).defaultLocale) || this.environmentService.getDefaultLocale() || 'en_US';
+
     try {
       await executeTx(this.db, async (trx) => {
         newUser = await this.userRepo.insertUser(
@@ -176,6 +179,7 @@ export class WorkspaceInvitationService {
             role: invitation.role,
             invitedById: invitation.invitedById,
             workspaceId: workspaceId,
+            locale: locale,
           },
           trx,
         );

@@ -301,7 +301,7 @@ export class AuthService {
       workspaceId: workspace.id,
       password: nanoIdGen(16),
       emailVerifiedAt: new Date(),
-      locale: this.environmentService.getDefaultLocale() || 'en-US',
+      locale: workspace.defaultLocale || this.environmentService.getDefaultLocale() || 'en-US',
       discordId: discordUser.id,
       avatarUrl: avatarUrl,
     });

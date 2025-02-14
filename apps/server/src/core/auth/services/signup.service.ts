@@ -10,6 +10,7 @@ import { InjectKysely } from 'nestjs-kysely';
 import { User } from '@docmost/db/types/entity.types';
 import { GroupUserRepo } from '@docmost/db/repos/group/group-user.repo';
 import { UserRole } from '../../../common/helpers/types/permission';
+import { EnvironmentService } from 'src/integrations/environment/environment.service';
 
 @Injectable()
 export class SignupService {
@@ -17,6 +18,7 @@ export class SignupService {
     private userRepo: UserRepo,
     private workspaceService: WorkspaceService,
     private groupUserRepo: GroupUserRepo,
+    private environmentService: EnvironmentService,
     @InjectKysely() private readonly db: KyselyDB,
   ) {}
 
@@ -36,6 +38,8 @@ export class SignupService {
       );
     }
 
+    const locale = (await this.workspaceService.getWorkspaceInfo(workspaceId)).defaultLocale|| this.environmentService.getDefaultLocale() || 'en_US';
+
     return await executeTx(
       this.db,
       async (trx) => {
@@ -44,6 +48,7 @@ export class SignupService {
           {
             ...createUserDto,
             workspaceId: workspaceId,
+            locale: locale,
           },
           trx,
         );
