@@ -74,6 +74,7 @@ export class WorkspaceService {
             name: createWorkspaceDto.name,
             hostname: createWorkspaceDto.hostname,
             description: createWorkspaceDto.description,
+            defaultLocale: createWorkspaceDto.defaultLocale,
           },
           trx,
         );
@@ -90,6 +91,7 @@ export class WorkspaceService {
           .set({
             workspaceId: workspace.id,
             role: UserRole.OWNER,
+            locale: createWorkspaceDto.defaultLocale,
           })
           .execute();
 
@@ -193,6 +195,10 @@ export class WorkspaceService {
 
     if (updateWorkspaceDto.logo) {
       workspace.logo = updateWorkspaceDto.logo;
+    }
+
+    if (updateWorkspaceDto.defaultLocale) {
+      workspace.defaultLocale = updateWorkspaceDto.defaultLocale;
     }
 
     await this.workspaceRepo.updateWorkspace(updateWorkspaceDto, workspaceId);

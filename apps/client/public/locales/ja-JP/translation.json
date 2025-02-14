@@ -338,5 +338,7 @@
   "Write anything. Enter \"/\" for commands": "文字を入力するか、「/」でコマンドを呼び出します",
   "Names do not match": "名前が一致しません",
   "Today, {{time}}": "今日、{{time}}",
-  "Yesterday, {{time}}": "昨日、{{time}}"
+  "Yesterday, {{time}}": "昨日、{{time}}",
+  "Workspace Default Language": "ワークスペースのデフォルト言語",
+  "Select workspace default language": "ワークスペースのデフォルト言語を選択"
 }

@@ -192,6 +192,7 @@ export interface WorkspaceInvitations {
 export interface Workspaces {
   createdAt: Generated<Timestamp>;
   customDomain: string | null;
+  defaultLocale: Generated<string | null>;
   defaultRole: Generated<string>;
   defaultSpaceId: string | null;
   deletedAt: Timestamp | null;
