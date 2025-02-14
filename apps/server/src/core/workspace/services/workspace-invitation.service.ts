@@ -24,6 +24,7 @@ import { TokenService } from '../../auth/services/token.service';
 import { nanoIdGen } from '../../../common/helpers';
 import { PaginationOptions } from '@docmost/db/pagination/pagination-options';
 import { executeWithPagination } from '@docmost/db/pagination/pagination';
+import { WorkspaceService } from './workspace.service';
 
 @Injectable()
 export class WorkspaceInvitationService {
