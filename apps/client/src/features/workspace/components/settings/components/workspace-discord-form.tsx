@@ -3,8 +3,11 @@ import { useAtom } from "jotai";
 import * as z from "zod";
 import { useEffect, useState } from "react";
 import { focusAtom } from "jotai-optics";
-import { getDiscordConfig, updateDiscordConfig } from "@/features/workspace/services/workspace-service";
-import { TextInput, Button, Stack, Switch } from "@mantine/core";
+import {
+  getDiscordConfig,
+  updateDiscordConfig,
+} from "@/features/workspace/services/workspace-service";
+import { Text, TextInput, Button, Stack, Switch, Group } from "@mantine/core";
 import { useForm, zodResolver } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 import useUserRole from "@/hooks/use-user-role";
@@ -91,59 +94,69 @@ export default function WorkspaceDiscordForm() {
       loadDiscordConfig();
     }
   }, [isAdmin, t]);
-  
+
   if (!isAdmin) {
     return null;
   }
 
   return (
-    <form onSubmit={form.onSubmit(handleSubmit)}>
-      <Stack my="md">
-        <Switch
-          label={t("Enable Discord Authentication")}
-          {...form.getInputProps("enabled", { type: "checkbox" })}
-        />
+    <Group justify="space-between" wrap="nowrap" gap="xl">
+      <div>
+              <Text size="md">Discord Integration</Text>
+              <Text size="sm" c="dimmed">
+                Discord authentication settings
+              </Text>
+            </div>
+      <form onSubmit={form.onSubmit(handleSubmit)}>
+        <Stack my="md">
+          <Switch
+            label={t("Enable Discord Authentication")}
+            {...form.getInputProps("enabled", { type: "checkbox" })}
+          />
 
-        {form.values.enabled && (
-          <>
-            <TextInput
-              label={t("Client ID")}
-              placeholder={t("Discord application client ID")}
-              variant="filled"
-              {...form.getInputProps("clientId")}
-            />
+          {form.values.enabled && (
+            <>
+              <TextInput
+                label={t("Client ID")}
+                placeholder={t("Discord application client ID")}
+                variant="filled"
+                {...form.getInputProps("clientId")}
+              />
 
-            <TextInput
-              label={t("Client Secret")}
-              placeholder={t("Discord application client secret")}
-              variant="filled"
-              type="password"
-              {...form.getInputProps("clientSecret")}
-            />
+              <TextInput
+                label={t("Client Secret")}
+                placeholder={t("Discord application client secret")}
+                variant="filled"
+                type="password"
+                {...form.getInputProps("clientSecret")}
+              />
 
-            <TextInput
-              label={t("Guild ID")}
-              placeholder={t("Discord server ID")}
-              variant="filled"
-              {...form.getInputProps("guildId")}
-            />
+              <TextInput
+                label={t("Guild ID")}
+                placeholder={t("Discord server ID")}
+                variant="filled"
+                {...form.getInputProps("guildId")}
+              />
 
-            <Switch
-              label={t("Enable Just-in-Time User Creation")}
-              description={t("Automatically create accounts for new Discord users")}
-              {...form.getInputProps("jitEnabled", { type: "checkbox" })}
-            />
-          </>
-        )}
+              <Switch
+                label={t("Enable Just-in-Time User Creation")}
+                description={t(
+                  "Automatically create accounts for new Discord users"
+                )}
+                {...form.getInputProps("jitEnabled", { type: "checkbox" })}
+              />
+            </>
+          )}
 
-        <Button
-          type="submit"
-          disabled={isLoading || !form.isDirty()}
-          loading={isLoading}
-        >
-          {t("Save")}
-        </Button>
-      </Stack>
-    </form>
+          <Button
+            type="submit"
+            disabled={isLoading || !form.isDirty()}
+            loading={isLoading}
+          >
+            {t("Save")}
+          </Button>
+        </Stack>
+      </form>
+    </Group>
   );
 }
