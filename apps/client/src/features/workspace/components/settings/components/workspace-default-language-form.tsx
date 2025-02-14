@@ -83,7 +83,7 @@ function WorkspaceLanguageSwitcher({
 }) {
   const { t } = useTranslation();
   const [language, setLanguage] = useState(
-    currentUser?.user.locale === "en" ? "en-US" : currentUser.user.locale
+    currentUser?.workspace.defaultLocale === "en" ? "en-US" : currentUser.workspace.defaultLocale
   );
 
   return (
