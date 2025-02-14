@@ -11,6 +11,7 @@ export interface IWorkspace {
   settings: any;
   createdAt: Date;
   updatedAt: Date;
+  defaultLocale: string;
   discordEnabled: boolean;
   discordClientId: string | null;
   discordClientSecret: string | null;
