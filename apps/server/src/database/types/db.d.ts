@@ -42,6 +42,15 @@ export interface Attachments {
   workspaceId: string;
 }
 
+export interface Backlinks {
+  createdAt: Generated<Timestamp>;
+  id: Generated<string>;
+  sourcePageId: string;
+  targetPageId: string;
+  updatedAt: Generated<Timestamp>;
+  workspaceId: string;
+}
+
 export interface Comments {
   content: Json | null;
   createdAt: Generated<Timestamp>;
@@ -213,6 +222,7 @@ export interface Workspaces {
 
 export interface DB {
   attachments: Attachments;
+  backlinks: Backlinks;
   comments: Comments;
   groups: Groups;
   groupUsers: GroupUsers;

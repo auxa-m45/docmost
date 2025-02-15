@@ -37,6 +37,7 @@ import {
   Excalidraw,
   Embed,
   TiptapAudio,
+  Mention,
 } from "@docmost/editor-ext";
 import {
   randomElement,
@@ -66,8 +67,11 @@ import clojure from "highlight.js/lib/languages/clojure";
 import fortran from "highlight.js/lib/languages/fortran";
 import haskell from "highlight.js/lib/languages/haskell";
 import scala from "highlight.js/lib/languages/scala";
+import mentionRenderItems from "@/features/editor/components/mention/mention-suggestion.ts";
+import { ReactNodeViewRenderer } from "@tiptap/react";
+import MentionView from "@/features/editor/components/mention/mention-view.tsx";
+import i18n from "@/i18n.ts";
 import { MarkdownClipboard } from "@/features/editor/extensions/markdown-clipboard.ts";
-import i18n from "i18next";
 
 const lowlight = createLowlight(common);
 lowlight.register("mermaid", plaintext);
@@ -133,6 +137,23 @@ export const mainExtensions = [
   Comment.configure({
     HTMLAttributes: {
       class: "comment-mark",
+    },
+  }),
+  Mention.configure({
+    suggestion: {
+      allowSpaces: true,
+      items: () => {
+        return [];
+      },
+      // @ts-ignore
+      render: mentionRenderItems,
+    },
+    HTMLAttributes: {
+      class: "mention",
+    },
+  }).extend({
+    addNodeView() {
+      return ReactNodeViewRenderer(MentionView);
     },
   }),
   Table.configure({
