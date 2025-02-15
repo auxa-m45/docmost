@@ -7,7 +7,7 @@ WORKDIR /app
 
 COPY . .
 
-RUN npm install -g pnpm@9.15.5
+RUN npm install -g pnpm
 RUN pnpm install --frozen-lockfile
 RUN pnpm build
 
@@ -33,7 +33,7 @@ COPY --from=builder /app/pnpm*.yaml /app/
 # Copy patches
 COPY --from=builder /app/patches /app/patches
 
-RUN npm install -g pnpm@9.15.5
+RUN npm install -g pnpm
 
 RUN chown -R node:node /app
 
