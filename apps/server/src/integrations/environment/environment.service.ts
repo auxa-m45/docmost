@@ -146,6 +146,17 @@ export class EnvironmentService {
     return !this.isCloud();
   }
 
+  getCollabUrl(): string {
+    return this.configService.get<string>('COLLAB_URL');
+  }
+
+  isCollabDisableRedis(): boolean {
+    const isStandalone = this.configService
+      .get<string>('COLLAB_DISABLE_REDIS', 'false')
+      .toLowerCase();
+    return isStandalone === 'true';
+  }
+
   getStateEncryptionKey(): string {
     return this.configService.get<string>('STATE_ENCRYPTION_KEY');
   }

@@ -1,11 +1,12 @@
 {
   "name": "docmost",
   "homepage": "https://docmost.com",
-  "version": "0.8.2",
+  "version": "0.8.4",
   "private": true,
   "scripts": {
     "build": "nx run-many -t build",
     "start": "pnpm --filter ./apps/server run start:prod",
+    "collab": "pnpm --filter ./apps/server run collab:prod",
     "server:build": "nx run server:build",
     "client:build": "nx run client:build",
     "editor-ext:build": "nx run @docmost/editor-ext:build",
