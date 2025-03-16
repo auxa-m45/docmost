@@ -64,7 +64,9 @@ export const handleAudioUpload =
   ({ validateFn, onUpload }: MediaUploadOptions): UploadFn =>
   async (file, view, pos, pageId) => {
     // check if the file is an audio
-    if (!validateFn?.(file)) return;
+    const validated = validateFn?.(file);
+    // @ts-ignore
+    if (!validated) return;
 
     // A fresh object to act as the ID for this upload
     const id: Record<string, never> = Object.create(null);
