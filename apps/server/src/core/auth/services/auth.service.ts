@@ -35,6 +35,7 @@ import { GroupUserRepo } from '@docmost/db/repos/group/group-user.repo';
 import { WorkspaceService } from 'src/core/workspace/services/workspace.service';
 import { UpdateDiscordConfigDto } from '../dto/discord-update-config.dto';
 import { DiscordConfigDto } from '../dto/discord-config.dto';
+import { EnvironmentService } from 'src/integrations/environment/environment.service';
 
 @Injectable()
 export class AuthService {
@@ -46,6 +47,7 @@ export class AuthService {
     private userTokenRepo: UserTokenRepo,
     private mailService: MailService,
     private workspaceRepo: WorkspaceRepo,
+    private environmentService: EnvironmentService,
     private domainService: DomainService,
     private workspaceService: WorkspaceService,
     private groupUserRepo: GroupUserRepo,
