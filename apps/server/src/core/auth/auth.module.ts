@@ -11,5 +11,6 @@ import { DiscordStrategy } from './strategies/discord.strategy';
   imports: [TokenModule, WorkspaceModule],
   controllers: [AuthController],
   providers: [AuthService, SignupService, JwtStrategy, DiscordStrategy],
+  exports: [SignupService],
 })
 export class AuthModule { }

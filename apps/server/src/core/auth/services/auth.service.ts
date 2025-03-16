@@ -29,7 +29,7 @@ import { KyselyDB } from '@docmost/db/types/kysely.types';
 import { InjectKysely } from 'nestjs-kysely';
 import { executeTx } from '@docmost/db/utils';
 import { VerifyUserTokenDto } from '../dto/verify-user-token.dto';
-import { EnvironmentService } from 'src/integrations/environment/environment.service';
+import { DomainService } from '../../../integrations/environment/domain.service';
 import { WorkspaceRepo } from '@docmost/db/repos/workspace/workspace.repo';
 import { GroupUserRepo } from '@docmost/db/repos/group/group-user.repo';
 import { WorkspaceService } from 'src/core/workspace/services/workspace.service';
@@ -46,7 +46,7 @@ export class AuthService {
     private userTokenRepo: UserTokenRepo,
     private mailService: MailService,
     private workspaceRepo: WorkspaceRepo,
-    private environmentService: EnvironmentService,
+    private domainService: DomainService,
     private workspaceService: WorkspaceService,
     private groupUserRepo: GroupUserRepo,
     @InjectKysely() private readonly db: KyselyDB,
@@ -56,7 +56,9 @@ export class AuthService {
     const user = await this.userRepo.findByEmail(
       loginDto.email,
       workspaceId,
-      true,
+      {
+        includePassword: true
+      }
     );
 
     if (
@@ -78,8 +80,11 @@ export class AuthService {
   }
 
   async setup(createAdminUserDto: CreateAdminUserDto) {
-    const user = await this.signupService.initialSetup(createAdminUserDto);
-    return this.tokenService.generateAccessToken(user);
+    const { workspace, user } =
+      await this.signupService.initialSetup(createAdminUserDto);
+
+    const authToken = await this.tokenService.generateAccessToken(user);
+    return { workspace, authToken };
   }
 
   async changePassword(
@@ -123,11 +128,11 @@ export class AuthService {
 
   async forgotPassword(
     forgotPasswordDto: ForgotPasswordDto,
-    workspaceId: string,
+    workspace: Workspace,
   ): Promise<void> {
     const user = await this.userRepo.findByEmail(
       forgotPasswordDto.email,
-      workspaceId,
+      workspace.id,
     );
 
     if (!user) {
@@ -135,7 +140,8 @@ export class AuthService {
     }
 
     const token = nanoIdGen(16);
-    const resetLink = `${this.environmentService.getAppUrl()}/password-reset?token=${token}`;
+
+    const resetLink = `${this.domainService.getUrl(workspace.hostname)}/password-reset?token=${token}`;
 
     await this.userTokenRepo.insertUserToken({
       token: token,
@@ -209,7 +215,7 @@ export class AuthService {
     userTokenDto: VerifyUserTokenDto,
     workspaceId: string,
   ): Promise<void> {
-    const userToken = await this.userTokenRepo.findById(
+    const userToken: UserToken = await this.userTokenRepo.findById(
       userTokenDto.token,
       workspaceId,
     );

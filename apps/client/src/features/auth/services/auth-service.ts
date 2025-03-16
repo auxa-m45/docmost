@@ -10,6 +10,7 @@ import {
   ISetupWorkspace,
   IVerifyUserToken,
 } from "@/features/auth/types/auth.types";
+import { IWorkspace } from "@/features/workspace/types/workspace.types.ts";
 
 export async function login(data: ILogin): Promise<void> {
   await api.post<void>("/auth/login", data);
@@ -28,8 +29,8 @@ export async function changePassword(
 
 export async function setupWorkspace(
   data: ISetupWorkspace,
-): Promise<any> {
-  const req = await api.post<any>("/auth/setup", data);
+): Promise<IWorkspace> {
+  const req = await api.post<IWorkspace>("/auth/setup", data);
   return req.data;
 }
 
