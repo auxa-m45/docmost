@@ -76,6 +76,14 @@ export const embedProviders: IEmbedProvider[] = [
     }
   },
   {
+    id: 'nicovideo',
+    name: 'niconico(β)',
+    regex: /^https:\/\/www\.nicovideo\.jp\/watch\/([a-z0-9]+)/,
+    getEmbedUrl: (match) => {
+      return `http://embed.nicovideo.jp/watch/${match[1]}?oldScript=1&referer=&from=0&allowProgrammaticFullScreen=1`;
+    }
+  },
+  {
     id: 'framer',
     name: 'Framer',
     regex: /^https:\/\/(www\.)?framer\.com\/embed\/([\w-]+)/,

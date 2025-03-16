@@ -43,6 +43,7 @@ import {
   VimeoIcon,
   YoutubeIcon,
 } from "@/components/icons";
+import { NicovideoIcon } from "@/components/icons/niconico-icon";
 
 const CommandGroups: SlashMenuGroupedItemsType = {
   basic: [
@@ -481,6 +482,15 @@ const CommandGroups: SlashMenuGroupedItemsType = {
           .setEmbed({ provider: "vimeo" })
           .run();
       },
+    },
+    {
+      title: "niconico",
+      description: "ニコニコ動画の動画を埋め込みます",
+      searchTerms: ["niconico", "ニコニコ", "nico"],
+      icon: NicovideoIcon,
+      command: ({ editor, range }: CommandProps) => {
+        editor.chain().focus().deleteRange(range).setEmbed({ provider: 'nicovideo' }).run();
+      }
     },
     {
       title: "Framer",
