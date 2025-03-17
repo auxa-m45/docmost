@@ -80,7 +80,7 @@ export const embedProviders: IEmbedProvider[] = [
     name: 'niconico(β)',
     regex: /^https:\/\/www\.nicovideo\.jp\/watch\/([a-z0-9]+)/,
     getEmbedUrl: (match) => {
-      return `http://embed.nicovideo.jp/watch/${match[1]}?oldScript=1&referer=&from=0&allowProgrammaticFullScreen=1`;
+      return `https://embed.nicovideo.jp/watch/${match[1]}?oldScript=1&referer=&from=0&allowProgrammaticFullScreen=1`;
     }
   },
   {
