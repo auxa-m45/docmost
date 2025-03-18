@@ -67,9 +67,11 @@ export default function GroupMembersList() {
                       <Text fz="sm" fw={500} lineClamp={1}>
                         {user.name}
                       </Text>
+                      {isAdmin && (
                       <Text fz="xs" c="dimmed">
                         {user.email}
                       </Text>
+                      )}
                     </div>
                   </Group>
                 </Table.Td>
