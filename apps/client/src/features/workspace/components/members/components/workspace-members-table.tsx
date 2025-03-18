@@ -36,7 +36,7 @@ export default function WorkspaceMembersTable() {
   const handleRoleChange = async (
     userId: string,
     currentRole: string,
-    newRole: string,
+    newRole: string
   ) => {
     if (newRole === currentRole) {
       return;
@@ -77,9 +77,11 @@ export default function WorkspaceMembersTable() {
                         <Text fz="sm" fw={500} lineClamp={1}>
                           {user.name}
                         </Text>
-                        <Text fz="xs" c="dimmed">
-                          {user.email}
-                        </Text>
+                        {isAdmin && (
+                          <Text fz="xs" c="dimmed">
+                            {user.email}
+                          </Text>
+                        )}
                       </div>
                     </Group>
                   </Table.Td>
