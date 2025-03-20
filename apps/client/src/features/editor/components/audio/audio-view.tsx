@@ -9,6 +9,7 @@ export default function AudioView(props: NodeViewProps) {
   const { node, selected } = props;
   const { src, align } = node.attrs;
   const audioRef = useRef<HTMLAudioElement>(null);
+  const progressRef = useRef<HTMLDivElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -16,11 +17,11 @@ export default function AudioView(props: NodeViewProps) {
   const [isMuted, setIsMuted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const alignClass = useMemo(() => {
-	if (align === "left") return "alignLeft";
-	if (align === "right") return "alignRight";
-	if (align === "center") return "alignCenter";
-	return "alignCenter";
-}, [align]);
+    if (align === "left") return "alignLeft";
+    if (align === "right") return "alignRight";
+    if (align === "center") return "alignCenter";
+    return "alignCenter";
+  }, [align]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -62,10 +63,11 @@ export default function AudioView(props: NodeViewProps) {
   }, [isMuted]);
 
   const handleProgressClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    if (audioRef.current && duration) {
-      const rect = e.currentTarget.getBoundingClientRect();
+    if (audioRef.current && duration && progressRef.current) {
+      // progressRef.currentを使用して、このコンポーネント固有のProgressエレメントを参照
+      const rect = progressRef.current.getBoundingClientRect();
       const x = e.clientX - rect.left;
-      const percentage = x / rect.width;
+      const percentage = Math.max(0, Math.min(1, x / rect.width));
       const newTime = percentage * duration;
       audioRef.current.currentTime = newTime;
       setProgress(percentage * 100);
@@ -116,7 +118,7 @@ export default function AudioView(props: NodeViewProps) {
   return (
     <NodeViewWrapper>
       <Box 
-	    className={alignClass} 
+        className={alignClass} 
         style={{ 
           maxWidth: '480px',
           width: '100%',
@@ -179,7 +181,7 @@ export default function AudioView(props: NodeViewProps) {
                     {audioRef.current ? formatTime(audioRef.current.currentTime) : "0:00"} / {formatTime(duration)}
                   </Text>
                 </Group>
-				<Space />
+                <Space />
                 <Tooltip label="ダウンロード">
                   <ActionIcon
                     onClick={handleDownload}
@@ -191,6 +193,7 @@ export default function AudioView(props: NodeViewProps) {
                 </Tooltip>
               </Group>
               <Progress
+                ref={progressRef}
                 value={progress}
                 onClick={handleProgressClick}
                 size="sm"
@@ -198,11 +201,11 @@ export default function AudioView(props: NodeViewProps) {
                 style={{ cursor: "pointer" }}
                 aria-label="オーディオの進行状況"
                 role="slider"
-				transitionDuration={200}
+                transitionDuration={200}
                 aria-valuemin={0}
                 aria-valuemax={100}
                 aria-valuenow={progress}
-				mb="xs"
+                mb="xs"
               />
             </>
           )}
