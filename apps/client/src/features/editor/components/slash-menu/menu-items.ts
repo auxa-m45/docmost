@@ -39,6 +39,7 @@ import {
   GoogleSheetsIcon,
   LoomIcon,
   MiroIcon,
+  SpotifyIcon,
   TypeformIcon,
   VimeoIcon,
   YoutubeIcon,
@@ -490,6 +491,20 @@ const CommandGroups: SlashMenuGroupedItemsType = {
       icon: NicovideoIcon,
       command: ({ editor, range }: CommandProps) => {
         editor.chain().focus().deleteRange(range).setEmbed({ provider: 'nicovideo' }).run();
+      }
+    },
+    {
+      title: "Spotify",
+      description: "Embed Spotify playlist",
+      searchTerms: ["spotify"],
+      icon: SpotifyIcon,
+      command: ({ editor, range }: CommandProps) => {
+        editor
+          .chain()
+          .focus()
+          .deleteRange(range)
+          .setSpotifyEmbed()
+          .run();
       }
     },
     {
