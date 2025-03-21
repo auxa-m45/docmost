@@ -22,6 +22,11 @@ import { executeTx } from '@docmost/db/utils';
 import { UserRepo } from '@docmost/db/repos/user/user.repo';
 import { WorkspaceRepo } from '@docmost/db/repos/workspace/workspace.repo';
 import { SpaceRepo } from '@docmost/db/repos/space/space.repo';
+import { AudioTranscoderService } from '../../../integrations/audio-transcoder/audio-transcoder.service';
+import { QueueJob, QueueName } from 'src/integrations/queue/constants';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
+
 
 @Injectable()
 export class AttachmentService {
@@ -33,6 +38,9 @@ export class AttachmentService {
     private readonly workspaceRepo: WorkspaceRepo,
     private readonly spaceRepo: SpaceRepo,
     @InjectKysely() private readonly db: KyselyDB,
+    private readonly audioTranscoderService: AudioTranscoderService,
+
+    @InjectQueue(QueueName.ATTACHMENT_QUEUE) private attachmentQueue: Queue,
   ) {}
 
   async uploadFile(opts: {
@@ -78,6 +86,11 @@ export class AttachmentService {
 
     await this.uploadToDrive(filePath, preparedFile.buffer);
 
+    // Determine if the file is an audio file
+    const isAudioFile = ['.mp3', '.wav', '.ogg', '.m4a'].includes(
+      preparedFile.fileExtension.toLowerCase()
+    );
+
     let attachment: Attachment = null;
     try {
       if (isUpdate) {
@@ -97,11 +110,21 @@ export class AttachmentService {
           spaceId,
           workspaceId,
           pageId,
+          workerStatus: isAudioFile ? 'pending' : undefined,
         });
       }
     } catch (err) {
       // delete uploaded file on error
       this.logger.error(err);
+    }
+
+    // Add audio conversion job to queue
+    if (isAudioFile && attachment) {
+      this.logger.log(`Adding audio conversion job for attachment: ${attachment.id}`);
+      await this.attachmentQueue.add(
+        QueueJob.PROCESS_AUDIO_FILE,
+        { attachmentId: attachment.id }
+      );
     }
 
     return attachment;
@@ -227,6 +250,7 @@ export class AttachmentService {
     pageId?: string;
     spaceId?: string;
     trx?: KyselyTransaction;
+    workerStatus?: 'pending' | 'converting' | 'done' | 'error';
   }): Promise<Attachment> {
     const {
       attachmentId,
@@ -237,6 +261,7 @@ export class AttachmentService {
       workspaceId,
       pageId,
       spaceId,
+      workerStatus,
       trx,
     } = opts;
     return this.attachmentRepo.insertAttachment(
@@ -252,6 +277,7 @@ export class AttachmentService {
         workspaceId: workspaceId,
         pageId: pageId,
         spaceId: spaceId,
+        workerStatus: workerStatus,
       },
       trx,
     );
@@ -287,6 +313,58 @@ export class AttachmentService {
 
     } catch (err) {
       throw err;
+    }
+  }
+
+  async processAudioFile(attachmentId: string): Promise<void> {
+    try {
+      // update attachment status to converting
+      await this.attachmentRepo.updateAttachmentPreview(attachmentId, {
+        workerStatus: 'converting'
+      });
+      
+      // find attachment
+      const attachment = await this.attachmentRepo.findById(attachmentId);
+      if (!attachment) {
+        throw new Error(`Attachment not found: ${attachmentId}`);
+      }
+      
+      // generate output key
+      const outputBaseName = attachment.filePath.replace(/\.[^/.]+$/, ''); // 拡張子を除去
+      const outputKey = `${outputBaseName}_preview.m4a`;
+      
+      // convert audio
+      const result = await this.audioTranscoderService.convertAudio(
+        attachment.filePath, 
+        outputKey
+      );
+      
+      if (result.success) {
+        // get preview url
+        const previewUrl = await this.storageService.getUrl(outputKey);
+        
+        // update attachment status to done
+        await this.attachmentRepo.updateAttachmentPreview(attachmentId, {
+          previewUrl,
+          workerStatus: 'done'
+        });
+        
+        const attachment = await this.attachmentRepo.findById(attachmentId);
+        this.logger.debug(`DEBUG ${attachment.previewUrl} ${attachment.workerStatus}`);
+
+        this.logger.log(`Audio conversion completed for ${attachmentId}`);
+      } else {
+        // update attachment status to error
+        await this.attachmentRepo.updateAttachmentPreview(attachmentId, {
+          workerStatus: 'error'
+        });
+        this.logger.error(`Failed to transcode audio: ${result.error}`);
+      }
+    } catch (error) {
+      this.logger.error(`Audio processing error: ${error instanceof Error ? error.message : 'Unknown error'}`, error instanceof Error ? error.stack : '');
+      await this.attachmentRepo.updateAttachmentPreview(attachmentId, {
+        workerStatus: 'error'
+      });
     }
   }
 }

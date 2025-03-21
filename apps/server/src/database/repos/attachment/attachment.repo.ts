@@ -66,6 +66,21 @@ export class AttachmentRepo {
       .returningAll()
       .executeTakeFirst();
   }
+  
+  async updateAttachmentPreview(
+    attachmentId: string,
+    previewData: {
+      previewUrl?: string;
+      workerStatus?: 'pending' | 'converting' | 'done' | 'error';
+    }
+  ): Promise<Attachment> {
+    return await this.db
+      .updateTable('attachments')
+      .set(previewData)
+      .where('id', '=', attachmentId)
+      .returningAll()
+      .executeTakeFirst();
+  }
 
   async deleteAttachmentById(attachmentId: string): Promise<void> {
     await this.db

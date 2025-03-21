@@ -13,6 +13,8 @@ export interface AttachmentAttributes {
   mime?: string; // e.g. application/zip
   size?: number;
   attachmentId?: string;
+  previewUrl?: string;
+  workerStatus?: 'pending' | 'converting' | 'done' | 'error';
 }
 
 declare module "@tiptap/core" {

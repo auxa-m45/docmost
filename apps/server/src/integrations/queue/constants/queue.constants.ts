@@ -11,6 +11,7 @@ export enum QueueJob {
   PAGE_CONTENT_UPDATE = 'page-content-update',
 
   PAGE_BACKLINKS = 'page-backlinks',
+  PROCESS_AUDIO_FILE = 'process-audio-file',
 }
 
 

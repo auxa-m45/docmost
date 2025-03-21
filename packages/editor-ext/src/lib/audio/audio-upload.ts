@@ -102,6 +102,7 @@ export const handleAudioUpload =
           attachmentId: attachment.id,
           title: attachment.fileName,
           size: attachment.fileSize,
+          workerStatus: "pending",
         });
         if (!node) return;
 

@@ -5,6 +5,8 @@
 
 import type { ColumnType } from "kysely";
 
+export type AttachmentWorkerStatus = "converting" | "done" | "error" | "pending";
+
 export type AuthProviderType = "google" | "oidc" | "saml";
 
 export type Generated<T> = T extends ColumnType<infer S, infer I, infer U>
@@ -38,9 +40,11 @@ export interface Attachments {
   id: Generated<string>;
   mimeType: string | null;
   pageId: string | null;
+  previewUrl: string | null;
   spaceId: string | null;
   type: string | null;
   updatedAt: Generated<Timestamp>;
+  workerStatus: AttachmentWorkerStatus | null;
   workspaceId: string;
 }
 

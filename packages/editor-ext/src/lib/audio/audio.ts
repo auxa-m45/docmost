@@ -15,6 +15,8 @@ export interface AudioAttributes {
   align?: string;
   attachmentId?: string;
   size?: number;
+  previewUrl?: string;
+  workerStatus?: "pending" | "converting" | "done" | "error";
 }
 
 declare module "@tiptap/core" {
@@ -73,6 +75,20 @@ export const TiptapAudio = Node.create<AudioOptions>({
         parseHTML: (element) => element.getAttribute("data-align"),
         renderHTML: (attributes: AudioAttributes) => ({
           "data-align": attributes.align,
+        }),
+      },
+      previewUrl: {
+        default: null,
+        parseHTML: (element) => element.getAttribute("data-preview-url"),
+        renderHTML: (attributes: AudioAttributes) => ({
+          "data-preview-url": attributes.previewUrl,
+        }),
+      },
+      workerStatus: {
+        default: null,
+        parseHTML: (element) => element.getAttribute("data-worker-status"),
+        renderHTML: (attributes: AudioAttributes) => ({
+          "data-worker-status": attributes.workerStatus,
         }),
       },
     };
