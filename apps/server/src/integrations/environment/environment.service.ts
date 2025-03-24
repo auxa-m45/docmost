@@ -198,4 +198,11 @@ export class EnvironmentService {
   getDefaultLocale(): string {
     return this.configService.get<string>('DEFAULT_LANG', 'en_US');
   }
+
+  isDisableTelemetry(): boolean {
+    const disable = this.configService
+      .get<string>('DISABLE_TELEMETRY', 'false')
+      .toLowerCase();
+    return disable === 'true';
+  }
 }
