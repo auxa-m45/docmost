@@ -32,7 +32,8 @@ import {
   Excalidraw,
   Embed,
   TiptapAudio,
-  Mention
+  Mention,
+  SpotifyEmbedExtension
 } from '@docmost/editor-ext';
 import { generateText, getSchema, JSONContent } from '@tiptap/core';
 import { generateHTML } from '../common/helpers/prosemirror/html';
@@ -72,6 +73,7 @@ export const tiptapExtensions = [
   TiptapImage,
   TiptapVideo,
   TiptapAudio,
+  SpotifyEmbedExtension,
   Callout,
   Attachment,
   CustomCodeBlock,
