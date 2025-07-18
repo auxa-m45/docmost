@@ -1,0 +1,26 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "npm",
+			"script": "dev",
+			"problemMatcher": [],
+			"label": "pnpm: dev",
+			"detail": "pnpm concurrently -n \"frontend,backend\" -c \"cyan,green\" \"pnpm run client:dev\" \"pnpm run server:dev\""
+		},
+		{
+			"type": "npm",
+			"script": "build",
+			"problemMatcher": [],
+			"label": "pnpm: Build the editor package",
+			"detail": "pnpm nx run @docmost/editor-ext:build"
+		},
+		{
+			"type": "npm",
+			"script": "migration",
+			"problemMatcher": [],
+			"label": "pnpm: To run all pending database migrations",
+			"detail": "pnpm nx run server:migration:latest"
+		}
+	]
+}

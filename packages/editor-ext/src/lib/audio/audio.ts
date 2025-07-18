@@ -1,11 +1,9 @@
 import { ReactNodeViewRenderer } from "@tiptap/react";
 import { AudioUploadPlugin } from "./audio-upload";
 import { type Range, Node } from "@tiptap/core";
-import type { ComponentType } from "react";
-import type { NodeViewProps } from "@tiptap/react";
 
 export interface AudioOptions {
-  view: ComponentType<NodeViewProps>;
+  view: any;
   HTMLAttributes: Record<string, string>;
 }
 

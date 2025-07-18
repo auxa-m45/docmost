@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Get,
@@ -27,7 +26,6 @@ import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { PasswordResetDto } from './dto/password-reset.dto';
 import { VerifyUserTokenDto } from './dto/verify-user-token.dto';
 import { FastifyReply, FastifyRequest } from 'fastify';
-import { addDays } from 'date-fns';
 import { DiscordAuthGuard } from './guards/discord.guard';
 import { DiscordConfigDto } from './dto/discord-config.dto';
 import { UserRole } from 'src/common/helpers/types/permission';
@@ -197,7 +195,7 @@ export class AuthController {
     @AuthUser() user: User,
     @AuthWorkspace() workspace: Workspace,
   ) {
-    return this.authService.getCollabToken(user.id, workspace.id);
+    return this.authService.getCollabToken(user, workspace.id);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -211,7 +209,7 @@ export class AuthController {
     res.setCookie('authToken', token, {
       httpOnly: true,
       path: '/',
-      expires: addDays(new Date(), 30),
+      expires: this.environmentService.getCookieExpiresIn(),
       secure: this.environmentService.isHttps(),
     });
   }

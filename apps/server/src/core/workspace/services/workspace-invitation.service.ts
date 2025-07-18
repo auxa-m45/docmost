@@ -29,6 +29,10 @@ import { InjectQueue } from '@nestjs/bullmq';
 import { QueueJob, QueueName } from '../../../integrations/queue/constants';
 import { Queue } from 'bullmq';
 import { EnvironmentService } from '../../../integrations/environment/environment.service';
+import {
+  validateAllowedEmail,
+  validateSsoEnforcement,
+} from '../../auth/auth.util';
 
 @Injectable()
 export class WorkspaceInvitationService {
@@ -65,19 +69,19 @@ export class WorkspaceInvitationService {
     return result;
   }
 
-  async getInvitationById(invitationId: string, workspaceId: string) {
+  async getInvitationById(invitationId: string, workspace: Workspace) {
     const invitation = await this.db
       .selectFrom('workspaceInvitations')
       .select(['id', 'email', 'createdAt'])
       .where('id', '=', invitationId)
-      .where('workspaceId', '=', workspaceId)
+      .where('workspaceId', '=', workspace.id)
       .executeTakeFirst();
 
     if (!invitation) {
       throw new NotFoundException('Invitation not found');
     }
 
-    return invitation;
+    return { ...invitation, enforceSso: workspace.enforceSso };
   }
 
   async getInvitationTokenById(invitationId: string, workspaceId: string) {
@@ -143,6 +147,10 @@ export class WorkspaceInvitationService {
           groupIds: validGroups?.map((group: Partial<Group>) => group.id),
         }));
 
+        if (invitesToInsert.length < 1) {
+          return;
+        }
+
         invites = await trx
           .insertInto('workspaceInvitations')
           .values(invitesToInsert)
@@ -171,12 +179,12 @@ export class WorkspaceInvitationService {
     }
   }
 
-  async acceptInvitation(dto: AcceptInviteDto, workspaceId: string) {
+  async acceptInvitation(dto: AcceptInviteDto, workspace: Workspace) {
     const invitation = await this.db
       .selectFrom('workspaceInvitations')
       .selectAll()
       .where('id', '=', dto.invitationId)
-      .where('workspaceId', '=', workspaceId)
+      .where('workspaceId', '=', workspace.id)
       .executeTakeFirst();
 
     if (!invitation) {
@@ -187,9 +195,12 @@ export class WorkspaceInvitationService {
       throw new BadRequestException('Invalid invitation token');
     }
 
+    validateSsoEnforcement(workspace);
+    validateAllowedEmail(invitation.email, workspace);
+
     let newUser: User;
 
-    const workspaceInfo = await this.workspaceService.getWorkspaceInfo(workspaceId);
+    const workspaceInfo = await this.workspaceService.getWorkspaceInfo(workspace.id);
     const locale = workspaceInfo.defaultLocale || this.environmentService.getDefaultLocale() || 'en_US';
 
     try {
@@ -202,7 +213,7 @@ export class WorkspaceInvitationService {
             password: dto.password,
             role: invitation.role,
             invitedById: invitation.invitedById,
-            workspaceId: workspaceId,
+            workspaceId: workspace.id,
             locale: locale,
           },
           trx,
@@ -211,7 +222,7 @@ export class WorkspaceInvitationService {
         // add user to default group
         await this.groupUserRepo.addUserToDefaultGroup(
           newUser.id,
-          workspaceId,
+          workspace.id,
           trx,
         );
 
@@ -221,7 +232,7 @@ export class WorkspaceInvitationService {
             .selectFrom('groups')
             .select(['id', 'name'])
             .where('groups.id', 'in', invitation.groupIds)
-            .where('groups.workspaceId', '=', workspaceId)
+            .where('groups.workspaceId', '=', workspace.id)
             .execute();
 
           if (validGroups && validGroups.length > 0) {
@@ -262,7 +273,7 @@ export class WorkspaceInvitationService {
     // notify the inviter
     const invitedByUser = await this.userRepo.findById(
       invitation.invitedById,
-      workspaceId,
+      workspace.id,
     );
 
     if (invitedByUser) {
@@ -279,7 +290,9 @@ export class WorkspaceInvitationService {
     }
 
     if (this.environmentService.isCloud()) {
-      await this.billingQueue.add(QueueJob.STRIPE_SEATS_SYNC, { workspaceId });
+      await this.billingQueue.add(QueueJob.STRIPE_SEATS_SYNC, {
+        workspaceId: workspace.id,
+      });
     }
 
     return this.tokenService.generateAccessToken(newUser);

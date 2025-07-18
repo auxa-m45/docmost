@@ -11,7 +11,6 @@ import { Typography } from "@tiptap/extension-typography";
 import { TextStyle } from "@tiptap/extension-text-style";
 import { Color } from "@tiptap/extension-color";
 import Table from "@tiptap/extension-table";
-import TableHeader from "@tiptap/extension-table-header";
 import SlashCommand from "@/features/editor/extensions/slash-command";
 import { Collaboration } from "@tiptap/extension-collaboration";
 import { CollaborationCursor } from "@tiptap/extension-collaboration-cursor";
@@ -25,6 +24,7 @@ import {
   MathInline,
   TableCell,
   TableRow,
+  TableHeader,
   TrailingNode,
   TiptapImage,
   Callout,
@@ -36,6 +36,7 @@ import {
   Drawio,
   Excalidraw,
   Embed,
+  SearchAndReplace,
   TiptapAudio,
   SpotifyEmbedExtension,
   Mention,
@@ -61,6 +62,7 @@ import EmbedView from "@/features/editor/components/embed/embed-view.tsx";
 import AudioView from "@/features/editor/components/audio/audio-view.tsx";
 import plaintext from "highlight.js/lib/languages/plaintext";
 import powershell from "highlight.js/lib/languages/powershell";
+import abap from "highlightjs-sap-abap";
 import elixir from "highlight.js/lib/languages/elixir";
 import erlang from "highlight.js/lib/languages/erlang";
 import dockerfile from "highlight.js/lib/languages/dockerfile";
@@ -75,12 +77,13 @@ import i18n from "@/i18n.ts";
 import { MarkdownClipboard } from "@/features/editor/extensions/markdown-clipboard.ts";
 import EmojiCommand from "./emoji-command";
 import { CharacterCount } from "@tiptap/extension-character-count";
+import { countWords } from "alfaaz";
 import SpotifyView from "../components/spotify/spotify-view";
 
 const lowlight = createLowlight(common);
 lowlight.register("mermaid", plaintext);
 lowlight.register("powershell", powershell);
-lowlight.register("powershell", powershell);
+lowlight.register("abap", abap);
 lowlight.register("erlang", erlang);
 lowlight.register("elixir", elixir);
 lowlight.register("dockerfile", dockerfile);
@@ -224,7 +227,25 @@ export const mainExtensions = [
       view: SpotifyView,
     }
   ),
-  CharacterCount
+  CharacterCount.configure({
+    wordCounter: (text) => countWords(text),
+  }),
+  SearchAndReplace.extend({
+    addKeyboardShortcuts() {
+      return {
+        'Mod-f': () => {
+          const event = new CustomEvent("openFindDialogFromEditor", {});
+          document.dispatchEvent(event);
+          return true;
+        },
+        'Escape': () => {
+          const event = new CustomEvent("closeFindDialogFromEditor", {});
+          document.dispatchEvent(event);
+          return true;
+        },
+      }
+    },
+  }).configure(),
 ] as any;
 
 type CollabExtensions = (provider: HocuspocusProvider, user: IUser) => any[];
