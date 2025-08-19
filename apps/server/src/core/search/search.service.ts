@@ -8,9 +8,6 @@ import { PageRepo } from '@docmost/db/repos/page/page.repo';
 import { SpaceMemberRepo } from '@docmost/db/repos/space/space-member.repo';
 import { ShareRepo } from '@docmost/db/repos/share/share.repo';
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const tsquery = require('pg-tsquery')();
-
 @Injectable()
 export class SearchService {
   constructor(
@@ -31,7 +28,7 @@ export class SearchService {
     if (query.length < 1) {
       return;
     }
-    const searchQuery = tsquery(query.trim() + '*');
+    const normalizedQuery = query.trim();
 
     let queryResults = this.db
       .selectFrom('pages')
@@ -44,17 +41,30 @@ export class SearchService {
         'creatorId',
         'createdAt',
         'updatedAt',
-        sql<number>`ts_rank(tsv, to_tsquery('english', f_normalize_japanese(${searchQuery})))`.as(
-          'rank',
-        ),
-        sql<string>`ts_headline('english', text_content, to_tsquery('english', f_normalize_japanese(${searchQuery})),'MinWords=9, MaxWords=10, MaxFragments=3')`.as(
-          'highlight',
-        ),
+        sql<number>`
+          (
+            COALESCE(bigm_similarity(f_normalize_japanese(title), f_normalize_japanese(${normalizedQuery})), 0) * 2.0 +
+            COALESCE(bigm_similarity(f_normalize_japanese(text_content), f_normalize_japanese(${normalizedQuery})), 0)
+          )
+        `.as('rank'),
+        sql<string>`
+          CASE 
+            WHEN position(f_normalize_japanese(${normalizedQuery}) in f_normalize_japanese(text_content)) > 0 THEN
+              substring(text_content, 
+                GREATEST(1, position(f_normalize_japanese(${normalizedQuery}) in f_normalize_japanese(text_content)) - 50),
+                200
+              )
+            ELSE substring(text_content, 1, 200)
+          END
+        `.as('highlight'),
       ])
       .where(
-        'tsv',
-        '@@',
-        sql<string>`to_tsquery('english', f_normalize_japanese(${searchQuery}))`,
+        sql<boolean>`
+          f_normalize_japanese(title) LIKE '%' || f_normalize_japanese(${normalizedQuery}) || '%' OR
+          f_normalize_japanese(text_content) LIKE '%' || f_normalize_japanese(${normalizedQuery}) || '%' OR
+          f_normalize_japanese(title) % f_normalize_japanese(${normalizedQuery}) OR
+          f_normalize_japanese(text_content) % f_normalize_japanese(${normalizedQuery})
+        `
       )
       .$if(Boolean(searchParams.creatorId), (qb) =>
         qb.where('creatorId', '=', searchParams.creatorId),
