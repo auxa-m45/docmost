@@ -119,11 +119,15 @@ export interface Comments {
   deletedAt: Timestamp | null;
   editedAt: Timestamp | null;
   id: Generated<string>;
+  lastEditedById: string | null;
   pageId: string;
   parentCommentId: string | null;
   resolvedAt: Timestamp | null;
+  resolvedById: string | null;
   selection: string | null;
+  spaceId: string;
   type: string | null;
+  updatedAt: Generated<Timestamp>;
   workspaceId: string;
 }
 
@@ -247,6 +251,18 @@ export interface Spaces {
   workspaceId: string;
 }
 
+export interface UserMfa {
+  backupCodes: string[] | null;
+  createdAt: Generated<Timestamp>;
+  id: Generated<string>;
+  isEnabled: Generated<boolean | null>;
+  method: Generated<string>;
+  secret: string | null;
+  updatedAt: Generated<Timestamp>;
+  userId: string;
+  workspaceId: string;
+}
+
 export interface Users {
   avatarUrl: string | null;
   createdAt: Generated<Timestamp>;
@@ -307,6 +323,7 @@ export interface Workspaces {
   discordGuildId: string | null;
   discordJitEnabled: Generated<boolean>;
   emailDomains: Generated<string[] | null>;
+  enforceMfa: Generated<boolean | null>;
   enforceSso: Generated<boolean>;
   hostname: string | null;
   id: Generated<string>;
@@ -336,6 +353,7 @@ export interface DB {
   shares: Shares;
   spaceMembers: SpaceMembers;
   spaces: Spaces;
+  userMfa: UserMfa;
   users: Users;
   userTokens: UserTokens;
   workspaceInvitations: WorkspaceInvitations;

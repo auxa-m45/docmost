@@ -8,6 +8,7 @@ import { AcceptInviteDto, InviteUserDto } from '../dto/invitation.dto';
 import { UserRepo } from '@docmost/db/repos/user/user.repo';
 import { InjectKysely } from 'nestjs-kysely';
 import { KyselyDB } from '@docmost/db/types/kysely.types';
+import { sql } from 'kysely';
 import { executeTx } from '@docmost/db/utils';
 import {
   Group,
@@ -57,7 +58,11 @@ export class WorkspaceInvitationService {
 
     if (pagination.query) {
       query = query.where((eb) =>
-        eb('email', 'ilike', `%${pagination.query}%`),
+        eb(
+          sql`email`,
+          'ilike',
+          sql`f_unaccent(${'%' + pagination.query + '%'})`,
+        ),
       );
     }
 
@@ -179,7 +184,14 @@ export class WorkspaceInvitationService {
     }
   }
 
-  async acceptInvitation(dto: AcceptInviteDto, workspace: Workspace) {
+  async acceptInvitation(
+    dto: AcceptInviteDto,
+    workspace: Workspace,
+  ): Promise<{
+    authToken?: string;
+    requiresLogin?: boolean;
+    message?: string;
+  }> {
     const invitation = await this.db
       .selectFrom('workspaceInvitations')
       .selectAll()
@@ -295,7 +307,14 @@ export class WorkspaceInvitationService {
       });
     }
 
-    return this.tokenService.generateAccessToken(newUser);
+    if (workspace.enforceMfa) {
+      return {
+        requiresLogin: true,
+      };
+    }
+
+    const authToken = await this.tokenService.generateAccessToken(newUser);
+    return { authToken };
   }
 
   async resendInvitation(

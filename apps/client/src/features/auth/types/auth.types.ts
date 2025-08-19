@@ -54,3 +54,10 @@ export interface IDiscordCallback {
   code: string;
   state: string;
 }
+
+export interface ILoginResponse {
+  userHasMfa?: boolean;
+  requiresMfaSetup?: boolean;
+  mfaToken?: string;
+  isMfaEnforced?: boolean;
+}
