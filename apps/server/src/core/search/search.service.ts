@@ -43,15 +43,15 @@ export class SearchService {
         'updatedAt',
         sql<number>`
           (
-            COALESCE(bigm_similarity(f_normalize_japanese(title), f_normalize_japanese(${normalizedQuery})), 0) * 2.0 +
-            COALESCE(bigm_similarity(f_normalize_japanese(text_content), f_normalize_japanese(${normalizedQuery})), 0)
+            COALESCE(bigm_similarity(LOWER(f_normalize_japanese(title)), LOWER(f_normalize_japanese(${normalizedQuery}))), 0) * 2.0 +
+            COALESCE(bigm_similarity(LOWER(f_normalize_japanese(text_content)), LOWER(f_normalize_japanese(${normalizedQuery}))), 0)
           )
         `.as('rank'),
         sql<string>`
           CASE 
-            WHEN position(f_normalize_japanese(${normalizedQuery}) in f_normalize_japanese(text_content)) > 0 THEN
+            WHEN position(LOWER(f_normalize_japanese(${normalizedQuery})) in LOWER(f_normalize_japanese(text_content))) > 0 THEN
               substring(text_content, 
-                GREATEST(1, position(f_normalize_japanese(${normalizedQuery}) in f_normalize_japanese(text_content)) - 50),
+                GREATEST(1, position(LOWER(f_normalize_japanese(${normalizedQuery})) in LOWER(f_normalize_japanese(text_content))) - 50),
                 200
               )
             ELSE substring(text_content, 1, 200)
@@ -60,10 +60,10 @@ export class SearchService {
       ])
       .where(
         sql<boolean>`
-          f_normalize_japanese(title) LIKE '%' || f_normalize_japanese(${normalizedQuery}) || '%' OR
-          f_normalize_japanese(text_content) LIKE '%' || f_normalize_japanese(${normalizedQuery}) || '%' OR
-          f_normalize_japanese(title) % f_normalize_japanese(${normalizedQuery}) OR
-          f_normalize_japanese(text_content) % f_normalize_japanese(${normalizedQuery})
+          LOWER(f_normalize_japanese(title)) LIKE '%' || LOWER(f_normalize_japanese(${normalizedQuery})) || '%' OR
+          LOWER(f_normalize_japanese(text_content)) LIKE '%' || LOWER(f_normalize_japanese(${normalizedQuery})) || '%' OR
+          LOWER(f_normalize_japanese(title)) % LOWER(f_normalize_japanese(${normalizedQuery})) OR
+          LOWER(f_normalize_japanese(text_content)) % LOWER(f_normalize_japanese(${normalizedQuery}))
         `
       )
       .$if(Boolean(searchParams.creatorId), (qb) =>
