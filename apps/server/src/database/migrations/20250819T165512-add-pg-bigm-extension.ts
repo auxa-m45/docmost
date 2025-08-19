@@ -17,10 +17,12 @@ export async function up(db: Kysely<any>): Promise<void> {
 }
 
 export async function down(db: Kysely<any>): Promise<void> {
-  // Drop the bigm indexes
+  // Drop all possible bigm indexes that might exist
   await sql`DROP INDEX IF EXISTS pages_text_content_bigm_idx`.execute(db);
   await sql`DROP INDEX IF EXISTS pages_title_bigm_idx`.execute(db);
+  await sql`DROP INDEX IF EXISTS pages_title_japanese_bigm_idx`.execute(db);
+  await sql`DROP INDEX IF EXISTS pages_text_content_japanese_bigm_idx`.execute(db);
   
-  // Drop pg_bigm extension
+  // Drop pg_bigm extension (all dependent indexes should be dropped by now)
   await sql`DROP EXTENSION IF EXISTS pg_bigm`.execute(db);
 }
