@@ -44,17 +44,17 @@ export class SearchService {
         'creatorId',
         'createdAt',
         'updatedAt',
-        sql<number>`ts_rank(tsv, to_tsquery('english', f_unaccent(${searchQuery})))`.as(
+        sql<number>`ts_rank(tsv, to_tsquery('english', f_normalize_japanese(${searchQuery})))`.as(
           'rank',
         ),
-        sql<string>`ts_headline('english', text_content, to_tsquery('english', f_unaccent(${searchQuery})),'MinWords=9, MaxWords=10, MaxFragments=3')`.as(
+        sql<string>`ts_headline('english', text_content, to_tsquery('english', f_normalize_japanese(${searchQuery})),'MinWords=9, MaxWords=10, MaxFragments=3')`.as(
           'highlight',
         ),
       ])
       .where(
         'tsv',
         '@@',
-        sql<string>`to_tsquery('english', f_unaccent(${searchQuery}))`,
+        sql<string>`to_tsquery('english', f_normalize_japanese(${searchQuery}))`,
       )
       .$if(Boolean(searchParams.creatorId), (qb) =>
         qb.where('creatorId', '=', searchParams.creatorId),
@@ -170,9 +170,9 @@ export class SearchService {
         .select(['id', 'name', 'description'])
         .where((eb) =>
           eb(
-            sql`LOWER(f_unaccent(groups.name))`,
+            sql`LOWER(f_normalize_japanese(groups.name))`,
             'like',
-            sql`LOWER(f_unaccent(${`%${query}%`}))`,
+            sql`LOWER(f_normalize_japanese(${`%${query}%`}))`,
           ),
         )
         .where('workspaceId', '=', workspaceId)
@@ -186,9 +186,9 @@ export class SearchService {
         .select(['id', 'slugId', 'title', 'icon', 'spaceId'])
         .where((eb) =>
           eb(
-            sql`LOWER(f_unaccent(pages.title))`,
+            sql`LOWER(f_normalize_japanese(pages.title))`,
             'like',
-            sql`LOWER(f_unaccent(${`%${query}%`}))`,
+            sql`LOWER(f_normalize_japanese(${`%${query}%`}))`,
           ),
         )
         .where('workspaceId', '=', workspaceId)
