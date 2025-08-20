@@ -18,7 +18,7 @@ services:
       - docmost:/app/data/storage
 
   db:
-    image: postgres:16-alpine
+    image: antiagingrecord/postgres:16-alpine-bigm
     environment:
       POSTGRES_DB: docmost
       POSTGRES_USER: docmost
