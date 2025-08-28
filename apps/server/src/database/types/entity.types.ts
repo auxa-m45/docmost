@@ -17,6 +17,8 @@ import {
   AuthProviders,
   AuthAccounts,
   Shares,
+  FileTasks,
+  UserMfa as _UserMFA,
 } from './db';
 
 // Workspace
@@ -107,3 +109,13 @@ export type UpdatableAuthAccount = Updateable<Omit<AuthAccounts, 'id'>>;
 export type Share = Selectable<Shares>;
 export type InsertableShare = Insertable<Shares>;
 export type UpdatableShare = Updateable<Omit<Shares, 'id'>>;
+
+// File Task
+export type FileTask = Selectable<FileTasks>;
+export type InsertableFileTask = Insertable<FileTasks>;
+export type UpdatableFileTask = Updateable<Omit<FileTasks, 'id'>>;
+
+// UserMFA
+export type UserMFA = Selectable<_UserMFA>;
+export type InsertableUserMFA = Insertable<_UserMFA>;
+export type UpdatableUserMFA = Updateable<Omit<_UserMFA, 'id'>>;

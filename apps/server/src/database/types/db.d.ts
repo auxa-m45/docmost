@@ -84,6 +84,7 @@ export interface Backlinks {
 
 export interface Billing {
   amount: Int8 | null;
+  billingScheme: string | null;
   cancelAt: Timestamp | null;
   cancelAtPeriodEnd: boolean | null;
   canceledAt: Timestamp | null;
@@ -96,6 +97,7 @@ export interface Billing {
   metadata: Json | null;
   periodEndAt: Timestamp | null;
   periodStartAt: Timestamp;
+  planName: string | null;
   quantity: Int8 | null;
   status: string;
   stripeCustomerId: string | null;
@@ -103,6 +105,9 @@ export interface Billing {
   stripePriceId: string | null;
   stripeProductId: string | null;
   stripeSubscriptionId: string;
+  tieredFlatAmount: Int8 | null;
+  tieredUnitAmount: Int8 | null;
+  tieredUpTo: string | null;
   updatedAt: Generated<Timestamp>;
   workspaceId: string;
 }
@@ -114,11 +119,33 @@ export interface Comments {
   deletedAt: Timestamp | null;
   editedAt: Timestamp | null;
   id: Generated<string>;
+  lastEditedById: string | null;
   pageId: string;
   parentCommentId: string | null;
   resolvedAt: Timestamp | null;
+  resolvedById: string | null;
   selection: string | null;
+  spaceId: string;
   type: string | null;
+  updatedAt: Generated<Timestamp>;
+  workspaceId: string;
+}
+
+export interface FileTasks {
+  createdAt: Generated<Timestamp>;
+  creatorId: string | null;
+  deletedAt: Timestamp | null;
+  errorMessage: string | null;
+  fileExt: string | null;
+  fileName: string;
+  filePath: string;
+  fileSize: Int8 | null;
+  id: Generated<string>;
+  source: string | null;
+  spaceId: string | null;
+  status: string | null;
+  type: string | null;
+  updatedAt: Generated<Timestamp>;
   workspaceId: string;
 }
 
@@ -224,6 +251,18 @@ export interface Spaces {
   workspaceId: string;
 }
 
+export interface UserMfa {
+  backupCodes: string[] | null;
+  createdAt: Generated<Timestamp>;
+  id: Generated<string>;
+  isEnabled: Generated<boolean | null>;
+  method: Generated<string>;
+  secret: string | null;
+  updatedAt: Generated<Timestamp>;
+  userId: string;
+  workspaceId: string;
+}
+
 export interface Users {
   avatarUrl: string | null;
   createdAt: Generated<Timestamp>;
@@ -277,6 +316,7 @@ export interface Workspaces {
   deletedAt: Timestamp | null;
   description: string | null;
   emailDomains: Generated<string[] | null>;
+  enforceMfa: Generated<boolean | null>;
   enforceSso: Generated<boolean>;
   hostname: string | null;
   id: Generated<string>;
@@ -298,6 +338,7 @@ export interface DB {
   backlinks: Backlinks;
   billing: Billing;
   comments: Comments;
+  fileTasks: FileTasks;
   groups: Groups;
   groupUsers: GroupUsers;
   pageHistory: PageHistory;
@@ -305,6 +346,7 @@ export interface DB {
   shares: Shares;
   spaceMembers: SpaceMembers;
   spaces: Spaces;
+  userMfa: UserMfa;
   users: Users;
   userTokens: UserTokens;
   workspaceInvitations: WorkspaceInvitations;

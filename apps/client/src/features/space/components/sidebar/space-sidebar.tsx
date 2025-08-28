@@ -6,7 +6,6 @@ import {
   Tooltip,
   UnstyledButton,
 } from "@mantine/core";
-import { spotlight } from "@mantine/spotlight";
 import {
   IconArrowDown,
   IconDots,
@@ -15,10 +14,10 @@ import {
   IconPlus,
   IconSearch,
   IconSettings,
+  IconTrash,
 } from "@tabler/icons-react";
-
 import classes from "./space-sidebar.module.css";
-import React, { useMemo } from "react";
+import React from "react";
 import { useAtom } from "jotai";
 import { SearchSpotlight } from "@/features/search/search-spotlight.tsx";
 import { treeApiAtom } from "@/features/page/tree/atoms/tree-api-atom.ts";
@@ -40,6 +39,7 @@ import { SwitchSpace } from "./switch-space";
 import ExportModal from "@/components/common/export-modal";
 import { mobileSidebarAtom } from "@/components/layouts/global/hooks/atoms/sidebar-atom.ts";
 import { useToggleSidebar } from "@/components/layouts/global/hooks/hooks/use-toggle-sidebar.ts";
+import { searchSpotlight } from "@/features/search/constants";
 
 export function SpaceSidebar() {
   const { t } = useTranslation();
@@ -51,7 +51,7 @@ export function SpaceSidebar() {
   const toggleMobileSidebar = useToggleSidebar(mobileSidebarAtom);
 
   const { spaceSlug } = useParams();
-  const { data: space, isLoading, isError } = useGetSpaceBySlugQuery(spaceSlug);
+  const { data: space } = useGetSpaceBySlugQuery(spaceSlug);
 
   const spaceRules = space?.membership?.permissions;
   const spaceAbility = useSpaceAbility(spaceRules);
@@ -100,7 +100,10 @@ export function SpaceSidebar() {
               </div>
             </UnstyledButton>
 
-            <UnstyledButton className={classes.menu} onClick={spotlight.open}>
+            <UnstyledButton
+              className={classes.menu}
+              onClick={searchSpotlight.open}
+            >
               <div className={classes.menuItemInner}>
                 <IconSearch
                   size={18}
@@ -204,6 +207,7 @@ interface SpaceMenuProps {
 }
 function SpaceMenu({ spaceId, onSpaceSettings }: SpaceMenuProps) {
   const { t } = useTranslation();
+  const { spaceSlug } = useParams();
   const [importOpened, { open: openImportModal, close: closeImportModal }] =
     useDisclosure(false);
   const [exportOpened, { open: openExportModal, close: closeExportModal }] =
@@ -250,6 +254,14 @@ function SpaceMenu({ spaceId, onSpaceSettings }: SpaceMenuProps) {
             leftSection={<IconSettings size={16} />}
           >
             {t("Space settings")}
+          </Menu.Item>
+
+          <Menu.Item
+            component={Link}
+            to={`/s/${spaceSlug}/trash`}
+            leftSection={<IconTrash size={16} />}
+          >
+            {t("Trash")}
           </Menu.Item>
         </Menu.Dropdown>
       </Menu>

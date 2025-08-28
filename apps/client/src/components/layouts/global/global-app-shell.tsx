@@ -14,7 +14,6 @@ import { AppHeader } from "@/components/layouts/global/app-header.tsx";
 import Aside from "@/components/layouts/global/aside.tsx";
 import classes from "./app-shell.module.css";
 import { useTrialEndAction } from "@/ee/hooks/use-trial-end-action.tsx";
-import { useClickOutside, useMergedRef } from "@mantine/hooks";
 import { useToggleSidebar } from "@/components/layouts/global/hooks/hooks/use-toggle-sidebar.ts";
 
 export default function GlobalAppShell({
@@ -30,13 +29,6 @@ export default function GlobalAppShell({
   const [sidebarWidth, setSidebarWidth] = useAtom(sidebarWidthAtom);
   const [isResizing, setIsResizing] = useState(false);
   const sidebarRef = useRef(null);
-  const navbarOutsideRef = useClickOutside(() => {
-    if (mobileOpened) {
-      toggleMobile();
-    }
-  });
-
-  const mergedRef = useMergedRef(sidebarRef, navbarOutsideRef);
 
   const startResizing = React.useCallback((mouseDownEvent) => {
     mouseDownEvent.preventDefault();
@@ -81,13 +73,15 @@ export default function GlobalAppShell({
   const isSettingsRoute = location.pathname.startsWith("/settings");
   const isSpaceRoute = location.pathname.startsWith("/s/");
   const isHomeRoute = location.pathname.startsWith("/home");
+  const isSpacesRoute = location.pathname === "/spaces";
   const isPageRoute = location.pathname.includes("/p/");
+  const hideSidebar = isHomeRoute || isSpacesRoute;
 
   return (
     <AppShell
       header={{ height: 45 }}
       navbar={
-        !isHomeRoute && {
+        !hideSidebar && {
           width: isSpaceRoute ? sidebarWidth : 300,
           breakpoint: "sm",
           collapsed: {
@@ -108,11 +102,11 @@ export default function GlobalAppShell({
       <AppShell.Header px="md" className={classes.header}>
         <AppHeader />
       </AppShell.Header>
-      {!isHomeRoute && (
+      {!hideSidebar && (
         <AppShell.Navbar
           className={classes.navbar}
           withBorder={false}
-          ref={mergedRef}
+          ref={sidebarRef}
         >
           <div className={classes.resizeHandle} onMouseDown={startResizing} />
           {isSpaceRoute && <SpaceSidebar />}

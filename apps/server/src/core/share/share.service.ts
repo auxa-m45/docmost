@@ -15,6 +15,7 @@ import {
   getAttachmentIds,
   getProsemirrorContent,
   isAttachmentNode,
+  removeMarkTypeFromDoc,
 } from '../../common/helpers/prosemirror/utils';
 import { Node } from '@tiptap/pm/model';
 import { ShareRepo } from '@docmost/db/repos/share/share.repo';
@@ -107,11 +108,11 @@ export class ShareService {
       includeCreator: true,
     });
 
-    page.content = await this.updatePublicAttachments(page);
-
-    if (!page) {
+    if (!page || page.deletedAt) {
       throw new NotFoundException('Shared page not found');
     }
+
+    page.content = await this.updatePublicAttachments(page);
 
     return { page, share };
   }
@@ -131,6 +132,7 @@ export class ShareService {
             sql`0`.as('level'),
           ])
           .where(isValidUUID(pageId) ? 'id' : 'slugId', '=', pageId)
+          .where('deletedAt', 'is', null)
           .unionAll((union) =>
             union
               .selectFrom('pages as p')
@@ -143,7 +145,8 @@ export class ShareService {
                 // Increase the level by 1 for each ancestor.
                 sql`ph.level + 1`.as('level'),
               ])
-              .innerJoin('page_hierarchy as ph', 'ph.parentPageId', 'p.id'),
+              .innerJoin('page_hierarchy as ph', 'ph.parentPageId', 'p.id')
+              .where('p.deletedAt', 'is', null),
           ),
       )
       .selectFrom('page_hierarchy')
@@ -223,11 +226,7 @@ export class ShareService {
                   .end()
                   .as('found'),
             ])
-            .where(
-              isValidUUID(childPageId) ? 'id' : 'slugId',
-              '=',
-              childPageId,
-            )
+            .where(isValidUUID(childPageId) ? 'id' : 'slugId', '=', childPageId)
             .unionAll((exp) =>
               exp
                 .selectFrom('pages as p')
@@ -292,6 +291,7 @@ export class ShareService {
       updateAttachmentAttr(node, 'url', token);
     });
 
-    return doc.toJSON();
+    const removeCommentMarks = removeMarkTypeFromDoc(doc, 'comment');
+    return removeCommentMarks.toJSON();
   }
 }

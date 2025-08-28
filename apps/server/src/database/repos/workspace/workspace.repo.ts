@@ -32,6 +32,7 @@ export class WorkspaceRepo {
     'trialEndAt',
     'enforceSso',
     'plan',
+    'enforceMfa',
   ];
   constructor(@InjectKysely() private readonly db: KyselyDB) {}
 
@@ -70,7 +71,7 @@ export class WorkspaceRepo {
     return await this.db
       .selectFrom('workspaces')
       .selectAll()
-      .orderBy('createdAt asc')
+      .orderBy('createdAt', 'asc')
       .limit(1)
       .executeTakeFirst();
   }

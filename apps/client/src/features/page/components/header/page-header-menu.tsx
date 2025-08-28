@@ -9,14 +9,20 @@ import {
   IconList,
   IconMessage,
   IconPrinter,
+  IconSearch,
   IconTrash,
   IconWifiOff,
 } from "@tabler/icons-react";
-import React, { useEffect } from "react";
+import React from "react";
 import useToggleAside from "@/hooks/use-toggle-aside.tsx";
 import { useAtom } from "jotai";
 import { historyAtoms } from "@/features/page-history/atoms/history-atoms.ts";
-import { useClipboard, useDisclosure } from "@mantine/hooks";
+import {
+  getHotkeyHandler,
+  useClipboard,
+  useDisclosure,
+  useHotkeys,
+} from "@mantine/hooks";
 import { useParams } from "react-router-dom";
 import { usePageQuery } from "@/features/page/queries/page-query.ts";
 import { buildPageUrl } from "@/features/page/page.utils.ts";
@@ -32,10 +38,12 @@ import {
   pageEditorAtom,
   yjsConnectionStatusAtom,
 } from "@/features/editor/atoms/editor-atoms.ts";
+import { searchAndReplaceStateAtom } from "@/features/editor/components/search-and-replace/atoms/search-and-replace-state-atom.ts";
 import { formattedDate, timeAgo } from "@/lib/time.ts";
+import { PageStateSegmentedControl } from "@/features/user/components/page-state-pref.tsx";
 import MovePageModal from "@/features/page/components/move-page-modal.tsx";
 import { useTimeAgo } from "@/hooks/use-time-ago.tsx";
-import ShareModal from '@/features/share/components/share-modal.tsx';
+import ShareModal from "@/features/share/components/share-modal.tsx";
 
 interface PageHeaderMenuProps {
   readOnly?: boolean;
@@ -44,6 +52,26 @@ export default function PageHeaderMenu({ readOnly }: PageHeaderMenuProps) {
   const { t } = useTranslation();
   const toggleAside = useToggleAside();
   const [yjsConnectionStatus] = useAtom(yjsConnectionStatusAtom);
+
+  useHotkeys(
+    [
+      [
+        "mod+F",
+        () => {
+          const event = new CustomEvent("openFindDialogFromEditor", {});
+          document.dispatchEvent(event);
+        },
+      ],
+      [
+        "Escape",
+        () => {
+          const event = new CustomEvent("closeFindDialogFromEditor", {});
+          document.dispatchEvent(event);
+        },
+      ],
+    ],
+    [],
+  );
 
   return (
     <>
@@ -59,7 +87,9 @@ export default function PageHeaderMenu({ readOnly }: PageHeaderMenuProps) {
         </Tooltip>
       )}
 
-      <ShareModal readOnly={readOnly}/>
+      {!readOnly && <PageStateSegmentedControl size="xs" />}
+
+      <ShareModal readOnly={readOnly} />
 
       <Tooltip label={t("Comments")} openDelay={250} withArrow>
         <ActionIcon
@@ -106,7 +136,7 @@ function PageActionMenu({ readOnly }: PageActionMenuProps) {
     { open: openMovePageModal, close: closeMoveSpaceModal },
   ] = useDisclosure(false);
   const [pageEditor] = useAtom(pageEditorAtom);
-  const pageUpdatedAt = useTimeAgo(page.updatedAt);
+  const pageUpdatedAt = useTimeAgo(page?.updatedAt);
 
   const handleCopyLink = () => {
     const pageUrl =
@@ -201,7 +231,7 @@ function PageActionMenu({ readOnly }: PageActionMenuProps) {
                 leftSection={<IconTrash size={16} />}
                 onClick={handleDeletePage}
               >
-                {t("Delete")}
+                {t("Move to trash")}
               </Menu.Item>
             </>
           )}
