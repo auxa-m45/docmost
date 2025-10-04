@@ -28,7 +28,7 @@ export class LocalDriver implements StorageDriver {
     }
   }
 
-  async uploadStream(filePath: string, file: Readable): Promise<void> {
+  async uploadStream(filePath: string, file: Readable, options?: { recreateClient?: boolean }): Promise<void> {
     try {
       const fullPath = this._fullPath(filePath);
       await fs.mkdir(dirname(fullPath), { recursive: true });
@@ -40,8 +40,11 @@ export class LocalDriver implements StorageDriver {
 
   async copy(fromFilePath: string, toFilePath: string): Promise<void> {
     try {
+      const fromFullPath = this._fullPath(fromFilePath);
+      const toFullPath = this._fullPath(toFilePath);
+      
       if (await this.exists(fromFilePath)) {
-        await fs.copy(fromFilePath, toFilePath);
+        await fs.copy(fromFullPath, toFullPath);
       }
     } catch (err) {
       throw new Error(`Failed to copy file: ${(err as Error).message}`);

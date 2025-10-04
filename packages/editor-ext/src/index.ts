@@ -19,6 +19,7 @@ export * from "./lib/mention";
 export * from "./lib/markdown";
 export * from "./lib/search-and-replace";
 export * from "./lib/embed-provider";
+export * from "./lib/subpages";
 
 export * from "./lib/audio";
 export * from "./lib/spotify";

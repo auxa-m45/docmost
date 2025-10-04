@@ -7,7 +7,12 @@ import {
   onAuthenticationFailedParameters,
   WebSocketStatus,
 } from "@hocuspocus/provider";
-import { EditorContent, EditorProvider, useEditor } from "@tiptap/react";
+import {
+  EditorContent,
+  EditorProvider,
+  useEditor,
+  useEditorState,
+} from "@tiptap/react";
 import {
   collabExtensions,
   mainExtensions,
@@ -31,6 +36,7 @@ import TableMenu from "@/features/editor/components/table/table-menu.tsx";
 import ImageMenu from "@/features/editor/components/image/image-menu.tsx";
 import CalloutMenu from "@/features/editor/components/callout/callout-menu.tsx";
 import VideoMenu from "@/features/editor/components/video/video-menu.tsx";
+import SubpagesMenu from "@/features/editor/components/subpages/subpages-menu.tsx";
 import AudioMenu from "@/features/editor/components/audio/audio-menu.tsx";
 import {
   handleFileDrop,
@@ -50,6 +56,7 @@ import { extractPageSlugId } from "@/lib";
 import { FIVE_MINUTES } from "@/lib/constants.ts";
 import { PageEditMode } from "@/features/user/types/user.types.ts";
 import { jwtDecode } from "jwt-decode";
+import { searchSpotlight } from "@/features/search/constants.ts";
 
 interface PageEditorProps {
   pageId: string;
@@ -76,7 +83,7 @@ export default function PageEditor({
   const [isLocalSynced, setLocalSynced] = useState(false);
   const [isRemoteSynced, setRemoteSynced] = useState(false);
   const [yjsConnectionStatus, setYjsConnectionStatus] = useAtom(
-    yjsConnectionStatusAtom
+    yjsConnectionStatusAtom,
   );
   const menuContainerRef = useRef(null);
   const documentName = `page.${pageId}`;
@@ -212,14 +219,18 @@ export default function PageEditor({
       extensions,
       editable,
       immediatelyRender: true,
-      shouldRerenderOnTransaction: true,
+      shouldRerenderOnTransaction: false,
       editorProps: {
         scrollThreshold: 80,
         scrollMargin: 80,
         handleDOMEvents: {
           keydown: (_view, event) => {
-            if ((event.ctrlKey || event.metaKey) && event.code === 'KeyS') {
+            if ((event.ctrlKey || event.metaKey) && event.code === "KeyS") {
               event.preventDefault();
+              return true;
+            }
+            if ((event.ctrlKey || event.metaKey) && event.code === "KeyK") {
+              searchSpotlight.open();
               return true;
             }
             if (["ArrowUp", "ArrowDown", "Enter"].includes(event.key)) {
@@ -263,8 +274,15 @@ export default function PageEditor({
         debouncedUpdateContent(editorJson);
       },
     },
-    [pageId, editable, remoteProvider]
+    [pageId, editable, remoteProvider],
   );
+
+  const editorIsEditable = useEditorState({
+    editor,
+    selector: (ctx) => {
+      return ctx.editor?.isEditable ?? false;
+    },
+  });
 
   const debouncedUpdateContent = useDebouncedCallback((newContent: any) => {
     const pageData = queryClient.getQueryData<IPage>(["pages", slugId]);
@@ -301,7 +319,7 @@ export default function PageEditor({
     return () => {
       document.removeEventListener(
         "ACTIVE_COMMENT_EVENT",
-        handleActiveCommentEvent
+        handleActiveCommentEvent,
       );
     };
   }, []);
@@ -376,7 +394,7 @@ export default function PageEditor({
   }
 
   return (
-    <div style={{ position: "relative" }}>
+    <div className="editor-container" style={{ position: "relative" }}>
       <div ref={menuContainerRef}>
         <EditorContent editor={editor} />
 
@@ -384,7 +402,7 @@ export default function PageEditor({
           <SearchAndReplaceDialog editor={editor} editable={editable} />
         )}
 
-        {editor && editor.isEditable && (
+        {editor && editorIsEditable && (
           <div>
             <EditorBubbleMenu editor={editor} />
             <TableMenu editor={editor} />
@@ -393,6 +411,7 @@ export default function PageEditor({
             <VideoMenu editor={editor} />
             <AudioMenu editor={editor} />
             <CalloutMenu editor={editor} />
+            <SubpagesMenu editor={editor} />
             <ExcalidrawMenu editor={editor} />
             <DrawioMenu editor={editor} />
             <LinkMenu editor={editor} appendTo={menuContainerRef} />

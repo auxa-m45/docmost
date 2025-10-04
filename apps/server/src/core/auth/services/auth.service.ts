@@ -118,6 +118,7 @@ export class AuthService {
     await this.userRepo.updateUser(
       {
         password: newPasswordHash,
+        hasGeneratedPassword: false,
       },
       userId,
       workspaceId,
@@ -198,6 +199,7 @@ export class AuthService {
       await this.userRepo.updateUser(
         {
           password: newPasswordHash,
+          hasGeneratedPassword: false,
         },
         user.id,
         workspace.id,
