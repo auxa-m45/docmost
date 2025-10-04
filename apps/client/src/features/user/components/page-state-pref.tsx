@@ -33,7 +33,7 @@ export function PageStateSegmentedControl({
   const { t } = useTranslation();
   const [user, setUser] = useAtom(userAtom);
   const pageEditMode =
-    user?.settings?.preferences?.pageEditMode ?? PageEditMode.Edit;
+    user?.settings?.preferences?.pageEditMode ?? PageEditMode.Read;
   const [value, setValue] = useState(pageEditMode);
 
   const handleChange = useCallback(

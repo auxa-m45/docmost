@@ -52,7 +52,7 @@ export function TitleEditor({
   const [activePageId, setActivePageId] = useState(pageId);
   const [currentUser] = useAtom(currentUserAtom);
   const userPageEditMode =
-    currentUser?.user?.settings?.preferences?.pageEditMode ?? PageEditMode.Edit;
+    currentUser?.user?.settings?.preferences?.pageEditMode ?? PageEditMode.Read;
 
   const titleEditor = useEditor({
     extensions: [

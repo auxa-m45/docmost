@@ -87,7 +87,7 @@ export default function PageEditor({
   const { pageSlug } = useParams();
   const slugId = extractPageSlugId(pageSlug);
   const userPageEditMode =
-    currentUser?.user?.settings?.preferences?.pageEditMode ?? PageEditMode.Edit;
+    currentUser?.user?.settings?.preferences?.pageEditMode ?? PageEditMode.Read;
 
   // Providers only created once per pageId
   const providersRef = useRef<{
