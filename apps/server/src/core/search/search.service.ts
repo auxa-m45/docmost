@@ -134,10 +134,33 @@ export class SearchService {
     }
 
     //@ts-ignore
-    queryResults = await queryResults.execute();
+    let results = await queryResults.execute();
+
+    // SECURITY FIX: Manually filter results to ensure only allowed pages are returned
+    // This is a workaround for a Kysely issue where WHERE id IN (...)
+    // doesn't always filter correctly in certain query patterns
+    if (searchParams.shareId && !searchParams.spaceId && !opts.userId) {
+      const shareId = searchParams.shareId;
+      const share = await this.shareRepo.findById(shareId);
+      if (share) {
+        const allowedPageIds: string[] = [];
+        if (share.includeSubPages) {
+          const pageList = await this.pageRepo.getPageAndDescendants(
+            share.pageId,
+            {
+              includeContent: false,
+            },
+          );
+          allowedPageIds.push(...pageList.map((page) => page.id));
+        } else {
+          allowedPageIds.push(share.pageId);
+        }
+        results = results.filter((r: any) => allowedPageIds.includes(r.id));
+      }
+    }
 
     //@ts-ignore
-    const searchResults = queryResults.map((result: SearchResponseDto) => {
+    const searchResults = results.map((result: SearchResponseDto) => {
       if (result.highlight) {
         result.highlight = result.highlight
           .replace(/\r\n|\r|\n/g, ' ')
