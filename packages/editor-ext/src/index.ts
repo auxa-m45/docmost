@@ -23,3 +23,6 @@ export * from "./lib/subpages";
 
 export * from "./lib/audio";
 export * from "./lib/spotify";
+export * from "./lib/highlight";
+export * from "./lib/heading/heading";
+export * from "./lib/unique-id";
