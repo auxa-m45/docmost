@@ -2,6 +2,7 @@ import {
   IsIn,
   IsNotEmpty,
   IsNotIn,
+  IsNumber,
   IsOptional,
   IsString,
   IsUrl,
@@ -149,6 +150,23 @@ export class EnvironmentVariables {
   @ValidateIf((obj) => obj.AI_DRIVER && obj.AI_DRIVER === 'ollama')
   @IsUrl({ protocols: ['http', 'https'], require_tld: false })
   OLLAMA_API_URL: string;
+
+  // Rate Limiting Configuration
+  @IsOptional()
+  @IsString()
+  RATE_LIMIT_TTL: string;
+
+  @IsOptional()
+  @IsString()
+  RATE_LIMIT_MAX: string;
+
+  @IsOptional()
+  @IsString()
+  RATE_LIMIT_AUTH_TTL: string;
+
+  @IsOptional()
+  @IsString()
+  RATE_LIMIT_AUTH_MAX: string;
 }
 
 export function validate(config: Record<string, any>) {

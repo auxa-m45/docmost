@@ -293,4 +293,21 @@ export class EnvironmentService {
       'http://localhost:11434',
     );
   }
+
+  // Rate Limiting Configuration
+  getRateLimitTTL(): number {
+    return parseInt(this.configService.get<string>('RATE_LIMIT_TTL', '60'));
+  }
+
+  getRateLimitMax(): number {
+    return parseInt(this.configService.get<string>('RATE_LIMIT_MAX', '100'));
+  }
+
+  getRateLimitAuthTTL(): number {
+    return parseInt(this.configService.get<string>('RATE_LIMIT_AUTH_TTL', '300'));
+  }
+
+  getRateLimitAuthMax(): number {
+    return parseInt(this.configService.get<string>('RATE_LIMIT_AUTH_MAX', '5'));
+  }
 }
