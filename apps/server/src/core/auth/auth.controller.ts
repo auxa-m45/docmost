@@ -13,6 +13,7 @@ import {
   UseGuards,
   Logger,
 } from '@nestjs/common';
+import { Throttle, SkipThrottle } from '@nestjs/throttler';
 import { LoginDto } from './dto/login.dto';
 import { AuthService } from './services/auth.service';
 import { SetupGuard } from './guards/setup.guard';
@@ -33,6 +34,7 @@ import { UserRole } from 'src/common/helpers/types/permission';
 import { validateSsoEnforcement } from './auth.util';
 import { ModuleRef } from '@nestjs/core';
 
+@SkipThrottle()
 @Controller('auth')
 export class AuthController {
   private readonly logger = new Logger(AuthController.name);
@@ -43,6 +45,7 @@ export class AuthController {
     private moduleRef: ModuleRef,
   ) {}
 
+  @Throttle({ default: { ttl: 300000, limit: 5 } }) // 5 minutes, 5 requests
   @HttpCode(HttpStatus.OK)
   @Post('login')
   async login(
@@ -95,6 +98,7 @@ export class AuthController {
     this.setAuthCookie(res, authToken);
   }
 
+  @Throttle({ default: { ttl: 300000, limit: 5 } }) // 5 minutes, 5 requests
   @Get('discord')
   @UseGuards(DiscordAuthGuard)
   async discordAuth(
@@ -103,6 +107,7 @@ export class AuthController {
 
   }
   
+  @Throttle({ default: { ttl: 300000, limit: 5 } }) // 5 minutes, 5 requests
   @Get('discord/callback')
   @UseGuards(DiscordAuthGuard)
   async discordAuthCallback(
@@ -128,6 +133,7 @@ export class AuthController {
     return res.status(302).redirect(`${redirectUrl}/discord-setup?data=${pendingUserData}`);
   }
 
+  @Throttle({ default: { ttl: 300000, limit: 5 } }) // 5 minutes, 5 requests
   @HttpCode(HttpStatus.OK)
   @Post('discord/complete-setup')
   async completeDiscordSetup(
@@ -174,6 +180,7 @@ export class AuthController {
     return this.authService.updateDiscordConfig(dto, workspace.id);
   }
 
+  @Throttle({ default: { ttl: 600000, limit: 3 } }) // 10 minutes, 3 requests
   @UseGuards(SetupGuard)
   @HttpCode(HttpStatus.OK)
   @Post('setup')
@@ -188,6 +195,7 @@ export class AuthController {
     return workspace;
   }
 
+  @Throttle({ default: { ttl: 60000, limit: 10 } }) // 1 minute, 10 requests
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   @Post('change-password')
@@ -199,6 +207,7 @@ export class AuthController {
     return this.authService.changePassword(dto, user.id, workspace.id);
   }
 
+  @Throttle({ default: { ttl: 300000, limit: 3 } }) // 5 minutes, 3 requests
   @HttpCode(HttpStatus.OK)
   @Post('forgot-password')
   async forgotPassword(
@@ -209,6 +218,7 @@ export class AuthController {
     return this.authService.forgotPassword(forgotPasswordDto, workspace);
   }
 
+  @Throttle({ default: { ttl: 300000, limit: 3 } }) // 5 minutes, 3 requests
   @HttpCode(HttpStatus.OK)
   @Post('password-reset')
   async passwordReset(

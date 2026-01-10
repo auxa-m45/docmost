@@ -1,8 +1,10 @@
 import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { CoreModule } from './core/core.module';
 import { EnvironmentModule } from './integrations/environment/environment.module';
+import { EnvironmentService } from './integrations/environment/environment.service';
 import { CollaborationModule } from './collaboration/collaboration.module';
 import { WsModule } from './ws/ws.module';
 import { DatabaseModule } from '@docmost/db/database.module';
@@ -18,6 +20,7 @@ import { SecurityModule } from './integrations/security/security.module';
 import { TelemetryModule } from './integrations/telemetry/telemetry.module';
 import { RedisModule } from '@nestjs-labs/nestjs-ioredis';
 import { RedisConfigService } from './integrations/redis/redis-config.service';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 
 const enterpriseModules = [];
 try {
@@ -41,6 +44,19 @@ try {
     RedisModule.forRootAsync({
       useClass: RedisConfigService,
     }),
+    ThrottlerModule.forRootAsync({
+      imports: [EnvironmentModule],
+      inject: [EnvironmentService],
+      useFactory: (envService: EnvironmentService) => ({
+        throttlers: [
+          {
+            name: 'default',
+            ttl: envService.getRateLimitTTL() * 1000, // Convert to milliseconds
+            limit: envService.getRateLimitMax(),
+          },
+        ],
+      }),
+    }),
     CollaborationModule,
     WsModule,
     QueueModule,
@@ -60,6 +76,12 @@ try {
     ...enterpriseModules,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {}
